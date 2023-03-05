@@ -1,4 +1,4 @@
-import { registerRootComponent } from 'expo';
+/* import { registerRootComponent } from 'expo';
 
 import AppWraper from './AppWrapper';
 
@@ -7,3 +7,6 @@ import AppWraper from './AppWrapper';
 // the environment is set up appropriately
 
 registerRootComponent(AppWraper);
+ */
+
+import 'expo-router/entry';

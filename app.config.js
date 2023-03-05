@@ -29,6 +29,7 @@ module.exports = {
     },
     web: {
       favicon: './assets/favicon.png',
+      bundler: 'metro',
     },
     extra: {
       eas: {

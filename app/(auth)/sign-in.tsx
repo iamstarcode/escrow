@@ -40,11 +40,18 @@ import React from 'react';
 
 import { Alert } from 'react-native';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
+
+import { useAuth } from './provider';
+import { useRouter } from 'expo-router';
 interface SignUpProps extends ScreenProps {}
 
-export default function SignIn({ navigation }: SignUpProps) {
+export default function SignIn({}: SignUpProps) {
   //const dispatch = useAppDispatch();
+
+  const router = useRouter();
+  const { setUser } = useAuth();
   const supabase = useSupabaseClient();
+
   const [show, setShow] = useState(false);
   const [facebokLoading, setFacebookLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -75,9 +82,11 @@ export default function SignIn({ navigation }: SignUpProps) {
       ...data,
     });
 
+    console.log('res ', res);
     setLoading(false);
 
-    if (res?.session) {
+    if (res?.user) {
+      //  setUser(res.user);
     } else {
       Alert.alert('Error', error?.message ?? '');
     }
@@ -199,7 +208,7 @@ export default function SignIn({ navigation }: SignUpProps) {
           </VStack>
           <Flex direction='row' justifyContent='space-between'>
             <Text
-              onPress={() => navigation.navigate('ForgotPassword')}
+              onPress={() => router.push('forgot-password')}
               style={{ ...fontRegular }}
               color='primary.400'
               fontSize={14}
@@ -207,7 +216,7 @@ export default function SignIn({ navigation }: SignUpProps) {
               Forgot password
             </Text>
             <Text
-              onPress={() => navigation.navigate('SignUp')}
+              onPress={() => router.push('sign-up')}
               style={{ ...fontRegular }}
               color='primary.400'
               fontSize={14}

@@ -15,28 +15,26 @@ import { AuthProvider } from './context/AuthContext';
 import { AxiosProvider } from './context/AxiosContext';
 
 //Screens
-import SignIn from './screens/auth/signin';
-import SingUp from './screens/auth/signup';
-import Home from './screens/home';
-import AuthScreens from './screens/auth/auth-screens';
+import SignIn from './app/(auth)/sign-in';
+import SingUp from './app/(auth)/sign-up';
+import Home from './app';
+import AuthScreens from './app/(auth)/auth-screens';
 import * as Linking from 'expo-linking';
 
 import { RootStackParamList } from './types';
 import { useAuth } from './context/AuthContext';
-import { useAppSelector } from './app/hooks';
-import { selectAuthenticated } from './app/features/auth/authSlice';
+import { useAppSelector } from './store/hooks';
 import React from 'react';
-import ForgotPassword from './screens/auth/forgot-password';
+import ChangePassword from './app/change-password';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const config = {
     screens: {
-      ForgotPassword: 'forgotpassword',
+      ChangePassword: 'ChangePassword',
     },
   };
   const [appIsReady, setAppIsReady] = useState(false);
-  const authenticated = useAppSelector(selectAuthenticated);
 
   const { session } = useAuth();
   useEffect(() => {
@@ -104,6 +102,10 @@ export default function App() {
                     component={Home}
                     options={{ headerShown: false }}
                   />
+                  <RootStack.Screen
+                    name='ChangePassword'
+                    component={ChangePassword}
+                  />
                 </>
               ) : (
                 <>
@@ -116,11 +118,6 @@ export default function App() {
                     name='SignUp'
                     component={SingUp}
                     options={{ headerShown: false }}
-                  />
-
-                  <RootStack.Screen
-                    name='ForgotPassword'
-                    component={ForgotPassword}
                   />
                 </>
               )}

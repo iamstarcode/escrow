@@ -1,3 +1,4 @@
+import { Formik, Form } from 'formik';
 import {
   Box,
   Center,
@@ -11,8 +12,6 @@ import {
   HStack,
 } from 'native-base';
 
-import * as Linking from 'expo-linking';
-
 import * as yup from 'yup';
 
 //import IconSignUp from '../../assets/img/signupicon.svg'
@@ -21,7 +20,7 @@ import MInput from '../../components/ui/Input';
 import MButton from '../../components/ui/Button';
 
 import { fontMedium, fontRegular } from '../../styles/index';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import SigninIcon from '../../assets/img/signupicon.svg';
 
@@ -31,22 +30,16 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { Alert, SafeAreaView } from 'react-native';
+import { Alert } from 'react-native';
+import { useRouter } from 'expo-router';
 
-interface ForgotPasswordProps extends ScreenProps {}
+interface SingUpProps extends ScreenProps {}
 
-export default function ForgotPassword({
-  route,
-  navigation,
-}: ForgotPasswordProps) {
+export default function SingUp({}: SingUpProps) {
+  const router = useRouter();
   const supabase = useSupabaseClient();
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const prefix = Linking.createURL('/');
-  console.log(prefix);
-
-  //const {} = useLinking
 
   const schema = yup.object().shape({
     email: yup.string().required().email('Must be a valid email'),
@@ -67,31 +60,24 @@ export default function ForgotPassword({
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    const { error, data: res } = await supabase.auth.resetPasswordForEmail(
-      data?.email,
-      {
-        redirectTo: 'com.iamstarcode.escrow://forget-password',
-      }
-    );
+    const { error, data: res } = await supabase.auth.signUp({
+      ...data,
+    });
 
     setLoading(false);
 
-    if (res) {
+    if (res?.session) {
     } else {
       Alert.alert('Error', error?.message ?? '');
     }
   };
-
-  useEffect(() => {
-    //console.log(Linking.useURL());
-  }, []);
   return (
-    <SafeAreaView style={{ flex: 1, padding: 10 }}>
+    <Box flex='1' px='3'>
       <Center mt='24'>
         <SigninIcon height={150} width={150} />
 
         <Text style={{ ...fontRegular }} mt='8' mb='2' fontSize='2xl'>
-          Forgot password
+          Register with Awesome
         </Text>
       </Center>
 
@@ -156,24 +142,11 @@ export default function ForgotPassword({
         >
           Sign in
         </MButton>
-
-        <MButton
-          onPress={async () => {
-            const { data, error } = await supabase.auth.verifyOtp({
-              type: 'recovery',
-              email: 'iamstarcode@gmail.com',
-              token: '384510',
-            });
-            console.log(data, error);
-          }}
-        >
-          Verify otp
-        </MButton>
         <Center pt={5}>
           <Text style={{ ...fontRegular }} color='coolGray.900' fontSize={14}>
             Alraedy have an account?{' '}
             <Text
-              onPress={() => navigation.navigate('SignIn')}
+              onPress={() => router.push('sign-in')}
               style={{ ...fontRegular }}
               color='primary.400'
               fontSize={14}
@@ -183,6 +156,6 @@ export default function ForgotPassword({
           </Text>
         </Center>
       </VStack>
-    </SafeAreaView>
+    </Box>
   );
 }

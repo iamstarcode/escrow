@@ -1,6 +1,6 @@
-import SignIn from './signin';
-import SingUp from './signup';
-import ForgotPassword from './forgot-password';
+import SignIn from './sign-in';
+import SingUp from './sign-up';
+import ForgotPassword from '../change-password';
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types';
