@@ -1,38 +1,42 @@
 import { useEffect, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
+/* import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import * as Facebook from 'expo-auth-session/providers/facebook';
 import { Prompt, ResponseType } from 'expo-auth-session';
 import * as SecureStorage from 'expo-secure-store';
-
+ */
 //WebBrowser.maybeCompleteAuthSession();
 
 import {
   Box,
   Center,
   FormControl,
-  HStack,
   VStack,
   Text,
   Flex,
-  Checkbox,
   Icon,
   ScrollView,
+  View,
+  Overlay,
+  Modal,
 } from 'native-base';
 
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
-import MInput from '../../components/ui/Input';
-import MButton from '../../components/ui/Button';
+import { MButton, MInput, MText } from '../../components/ui';
 
 import { fontRegular } from '../../styles';
 
 import GoogeIcon from '../../assets/img/googleicon.svg';
 import SigninIcon from '../../assets/img/singinicon.svg';
 import { AntDesign } from '@expo/vector-icons';
+
+import { OnboardFlow } from 'react-native-onboard';
+
+import MultiSteps from 'react-native-multi-steps';
 
 import { ScreenProps } from '../../types';
 
@@ -41,7 +45,6 @@ import React from 'react';
 import { Alert } from 'react-native';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 
-import { useAuth } from './provider';
 import { useRouter } from 'expo-router';
 interface SignUpProps extends ScreenProps {}
 
@@ -49,7 +52,7 @@ export default function SignIn({}: SignUpProps) {
   //const dispatch = useAppDispatch();
 
   const router = useRouter();
-  const { setUser } = useAuth();
+
   const supabase = useSupabaseClient();
 
   const [show, setShow] = useState(false);
@@ -71,29 +74,25 @@ export default function SignIn({}: SignUpProps) {
     defaultValues: {
       email: 'iamstarcode@gmail.com',
       password: 'bakare007',
-      rememberMe: false,
     },
     resolver: yupResolver(schema),
   });
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    const { error, data: res } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       ...data,
     });
 
-    console.log('res ', res);
     setLoading(false);
 
-    if (res?.user) {
-      //  setUser(res.user);
-    } else {
+    if (error) {
       Alert.alert('Error', error?.message ?? '');
     }
   };
 
   return (
-    <Box flex={1} px='3' pb='5'>
+    <Box flex={1} px='3' pb='5' bg='white'>
       <ScrollView>
         <Center mt='24'>
           <SigninIcon />
@@ -155,21 +154,7 @@ export default function SignIn({}: SignUpProps) {
               </FormControl>
             )}
           />
-          <HStack space={2} justifyContent='flex-end'>
-            <Text style={{ ...fontRegular }}>Remember Me</Text>
-            <Controller
-              name='rememberMe'
-              control={control}
-              render={({ field: { onChange, value } }) => (
-                <Checkbox
-                  value={value + ''}
-                  isChecked={value}
-                  onChange={onChange}
-                  accessibilityLabel='remember-me'
-                />
-              )}
-            />
-          </HStack>
+
           <MButton
             isLoading={loading}
             isDisabled={!isValid}
@@ -181,15 +166,14 @@ export default function SignIn({}: SignUpProps) {
 
           <VStack space='2'>
             <MButton
-              bg='white'
-              color='primary.500'
+              bg='red.700'
+              color='white'
               leftIcon={<Icon as={GoogeIcon} />}
               onPress={() => {}}
               isLoading={googleLoading}
               _loading={{
                 bg: 'gray.400',
               }}
-              _text={{ color: 'primary.500' }}
             >
               Sign in with Google
             </MButton>
@@ -207,22 +191,20 @@ export default function SignIn({}: SignUpProps) {
             </MButton>
           </VStack>
           <Flex direction='row' justifyContent='space-between'>
-            <Text
+            <MText
               onPress={() => router.push('forgot-password')}
               style={{ ...fontRegular }}
-              color='primary.400'
               fontSize={14}
             >
               Forgot password
-            </Text>
-            <Text
+            </MText>
+            <MText
               onPress={() => router.push('sign-up')}
               style={{ ...fontRegular }}
-              color='primary.400'
               fontSize={14}
             >
               Create account
-            </Text>
+            </MText>
           </Flex>
         </VStack>
       </ScrollView>

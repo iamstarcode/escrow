@@ -20,26 +20,9 @@ export interface IAuthState {
 }
 
 export interface AuthContextType {
-  //authState: IAuthState;
-  //setAuthState: (authState: IAuthState) => void;
-  //getAccessToken: () => void;
-  //logout: () => void;
   session: AuthSession | null | undefined;
-  user: AuthUser | null | undefined;
-  setUser: (user: AuthUser | null) => void;
   getAuthSupabaseClient: () => Promise<SupabaseClient<any, 'public', any>>;
 }
-
-/* const initialData: AuthContextType = {
-  authState: {
-    accessToken: '',
-    authenticated: false,
-  },
-  setAuthState: () => '',
-  getAccessToken: () => '',
-  logout: () => '',
-  session: null,
-}; */
 
 interface Props {
   children?: React.ReactNode;
@@ -56,8 +39,8 @@ export function AuthProvider({ children }: Props) {
   const path = usePathname();
 
   const [session, setSession] = useState<AuthSession | null | undefined>(null);
-  const [user, setUser] = useState<AuthUser | null | undefined>(null);
 
+  //console.log(path);
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -66,8 +49,9 @@ export function AuthProvider({ children }: Props) {
     const { data: authListner } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
-        console.log(`${_event}:event raised`);
+        //console.log(`${_event}:event raised`);
         if (_event == 'TOKEN_REFRESHED') {
+          //Handle Accordinngly
         }
       }
     );
@@ -115,9 +99,7 @@ export function AuthProvider({ children }: Props) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ session, user, setUser, getAuthSupabaseClient }}
-    >
+    <AuthContext.Provider value={{ session, getAuthSupabaseClient }}>
       {children}
     </AuthContext.Provider>
   );

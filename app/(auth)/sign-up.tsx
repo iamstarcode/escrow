@@ -1,4 +1,3 @@
-import { Formik, Form } from 'formik';
 import {
   Box,
   Center,
@@ -16,8 +15,7 @@ import * as yup from 'yup';
 
 //import IconSignUp from '../../assets/img/signupicon.svg'
 import { ScreenProps } from '../../types';
-import MInput from '../../components/ui/Input';
-import MButton from '../../components/ui/Button';
+import { MButton, MInput, MText } from '../../components/ui';
 
 import { fontMedium, fontRegular } from '../../styles/index';
 import { useState } from 'react';
@@ -42,6 +40,8 @@ export default function SingUp({}: SingUpProps) {
   const [loading, setLoading] = useState(false);
 
   const schema = yup.object().shape({
+    firstname: yup.string().required().min(3, 'Name too short'),
+    lastname: yup.string().required().min(3, 'Name too short'),
     email: yup.string().required().email('Must be a valid email'),
     password: yup.string().required('Please enter a password'),
   });
@@ -51,6 +51,8 @@ export default function SingUp({}: SingUpProps) {
     formState: { errors, isValid },
   } = useForm({
     defaultValues: {
+      firstname: '',
+      lastname: '',
       email: 'iamstarcode@gmail.com',
       password: 'bakare007',
       rememberMe: false,
@@ -64,15 +66,19 @@ export default function SingUp({}: SingUpProps) {
       ...data,
     });
 
+    await supabase
+      .from('profiles')
+      .update({ first_name: data.firstname, last_name: data.lastname })
+      .eq('id', res.user?.id);
+
     setLoading(false);
 
-    if (res?.session) {
-    } else {
+    if (error) {
       Alert.alert('Error', error?.message ?? '');
     }
   };
   return (
-    <Box flex='1' px='3'>
+    <Box flex='1' px='3' bg='white'>
       <Center mt='24'>
         <SigninIcon height={150} width={150} />
 
@@ -83,10 +89,50 @@ export default function SingUp({}: SingUpProps) {
 
       <VStack space='3'>
         <Controller
+          name='firstname'
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormControl isInvalid={!!errors.firstname}>
+              <FormControl.Label>First name</FormControl.Label>
+              <MInput
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder='Enter first name'
+                type='text'
+              />
+              <FormControl.ErrorMessage fontSize='xl'>
+                {errors.firstname?.message}
+              </FormControl.ErrorMessage>
+            </FormControl>
+          )}
+        />
+
+        <Controller
+          name='lastname'
+          control={control}
+          render={({ field: { onChange, onBlur, value } }) => (
+            <FormControl isInvalid={!!errors.lastname}>
+              <FormControl.Label>Last name</FormControl.Label>
+              <MInput
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                placeholder='Enter your last name'
+                type='text'
+              />
+              <FormControl.ErrorMessage fontSize='xl'>
+                {errors.lastname?.message}
+              </FormControl.ErrorMessage>
+            </FormControl>
+          )}
+        />
+        <Controller
           name='email'
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
             <FormControl isInvalid={!!errors.email}>
+              <FormControl.Label>Email</FormControl.Label>
               <MInput
                 autoComplete='email'
                 value={value}
@@ -106,6 +152,7 @@ export default function SingUp({}: SingUpProps) {
           control={control}
           render={({ field: { onChange, onBlur, value } }) => (
             <FormControl isInvalid={!!errors.password}>
+              <FormControl.Label>Password</FormControl.Label>
               <MInput
                 type={show ? 'text' : 'password'}
                 InputRightElement={
@@ -145,14 +192,14 @@ export default function SingUp({}: SingUpProps) {
         <Center pt={5}>
           <Text style={{ ...fontRegular }} color='coolGray.900' fontSize={14}>
             Alraedy have an account?{' '}
-            <Text
+            <MText
               onPress={() => router.push('sign-in')}
               style={{ ...fontRegular }}
               color='primary.400'
               fontSize={14}
             >
               Sign In
-            </Text>
+            </MText>
           </Text>
         </Center>
       </VStack>

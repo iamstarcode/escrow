@@ -1,4 +1,4 @@
-import { extendTheme } from 'native-base'
+import { extendTheme } from 'native-base';
 
 const colors = {
   brand: {
@@ -7,20 +7,20 @@ const colors = {
     700: '#737a00',
   },
   primary: {
-    50: '#dcf6ff',
-    100: '#b2dffe',
-    200: '#85c8f8',
-    300: '#57b2f2',
-    400: '#2b9ced',
-    500: '#1282d4',
-    600: '#0565a6',
-    700: '#004878',
-    800: '#002b4b',
-    900: '#000f1f',
+    50: '#ebe6ff',
+    100: '#c3b7fe',
+    200: '#9a88f8',
+    300: '#7258f3',
+    400: '#4b29ef',
+    500: '#3110d5',
+    600: '#260ca7',
+    700: '#1a0778',
+    800: '#0e0449',
+    900: '#05011e',
   },
 
   // Make sure values below matches any of the keys in `fontConfig`
-}
+};
 
 const fontConfig = {
   fontConfig: {
@@ -62,14 +62,14 @@ const fontConfig = {
       //   },
     },
   },
-}
+};
 export const theme = extendTheme({
   colors,
   fontConfig,
 
   fonts: {
-    heading:'Euclid',
+    heading: 'Euclid',
     body: 'Euclid',
     mono: 'Euclid',
   },
-})
+});

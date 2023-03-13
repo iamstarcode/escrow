@@ -18,8 +18,8 @@ import * as yup from 'yup';
 
 //import IconSignUp from '../../assets/img/signupicon.svg'
 import { ScreenProps } from '../types';
-import MInput from '../components/ui/Input';
-import MButton from '../components/ui/Button';
+import MInput from '../components/ui/MInput';
+import MButton from '../components/ui/MButton';
 
 import { fontMedium, fontRegular } from '../styles/index';
 import { useEffect, useState } from 'react';
@@ -33,6 +33,7 @@ import React from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { Alert, SafeAreaView } from 'react-native';
+import { Stack } from 'expo-router';
 
 interface ChangePasswordProps extends ScreenProps {}
 
@@ -86,6 +87,12 @@ export default function ChangePassword({
   }, []);
   return (
     <SafeAreaView style={{ flex: 1, padding: 10 }}>
+      <Stack.Screen
+        options={{
+          title: 'Change Password',
+          headerShown: true,
+        }}
+      />
       <ScrollView>
         <Center mt='24'>
           <SigninIcon height={150} width={150} />

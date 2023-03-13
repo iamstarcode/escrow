@@ -4,24 +4,20 @@ import * as Font from 'expo-font';
 
 import { StatusBar } from 'expo-status-bar';
 import { NativeBaseProvider, Box } from 'native-base';
-import { useAuth, AuthProvider } from './(auth)/provider';
+import { AuthProvider } from './(auth)/provider';
 
 import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { supabase } from '../lib/supabase';
 
 import { theme } from '../config/native-base-config';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const unstable_settings = {
   // Ensure any route can link back to `/`
-  initialRouteName: 'index',
+  initialRouteName: '/',
 };
 
 export default function Layout() {
-  const config = {
-    screens: {
-      ChangePassword: 'ChangePassword',
-    },
-  };
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
@@ -38,7 +34,6 @@ export default function Layout() {
           EuclidCircularAMedium: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Medium.ttf'),
           EuclidCircularALight: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Light.ttf'),
         });
-        //get refreshToken
       } catch (e) {
         console.warn(e);
       } finally {
@@ -69,14 +64,14 @@ export default function Layout() {
     <SessionContextProvider supabaseClient={supabase}>
       <AuthProvider>
         <NativeBaseProvider theme={theme}>
-          <Box onLayout={onLayoutRootView} flex={1} bg='coolGray.100'>
+          <Box onLayout={onLayoutRootView} flex={1} bg='white'>
             <StatusBar
               style='inverted'
               animated={true}
               backgroundColor='#3333334a'
               translucent={true}
             />
-            <Slot />
+            <Stack screenOptions={{ headerShown: false }} />
           </Box>
         </NativeBaseProvider>
       </AuthProvider>

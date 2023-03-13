@@ -9,9 +9,10 @@ export default function MButton(props: IButtonProps) {
   return (
     <Button
       size='lg'
-      bg='primary.400'
+      bg='primary.300'
+      borderRadius='xl'
       p='4'
-      _text={{ fontSize: 18 }}
+      _text={{ fontSize: 18, color: 'white' }}
       {...props}
     />
   );
