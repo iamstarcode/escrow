@@ -23,7 +23,7 @@
     "@supabase/supabase-js": "^2.8.0",
     "axios": "^0.27.2",
     "axios-auth-refresh": "^3.3.1",
-    "expo": "~48.0.4",
+    "expo": "^48.0.6",
     "expo-application": "^5.0.1",
     "expo-asset": "~8.9.0",
     "expo-auth-session": "~4.0.3",
@@ -31,6 +31,7 @@
     "expo-crypto": "~12.2.1",
     "expo-dev-client": "~2.1.5",
     "expo-font": "~11.1.1",
+    "expo-image-picker": "~14.1.1",
     "expo-linking": "~4.0.1",
     "expo-random": "~13.1.1",
     "expo-router": "^1.2.1",
@@ -57,8 +58,7 @@
     "react-native-web": "0.18.10",
     "react-number-format": "^5.1.4",
     "react-redux": "^8.0.2",
-    "yup": "^0.32.11",
-    "expo-image-picker": "~14.1.1"
+    "yup": "^0.32.11"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
@@ -69,5 +69,6 @@
     "react-test-renderer": "18.1.0",
     "typescript": "^4.9.4"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@1.22.19"
 }
