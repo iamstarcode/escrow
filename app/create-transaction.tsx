@@ -9,7 +9,9 @@ import {
   Modal,
   ScrollView,
   TextArea,
+  Image,
   VStack,
+  Checkbox,
 } from "native-base";
 import { SplashScreen, useRouter } from "expo-router";
 import { Fontisto, AntDesign } from "@expo/vector-icons";
@@ -21,11 +23,16 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 import { MButton, MInput, MText } from "../components/ui";
 
-import StackScreen from "../components/StackScreen";
-import { ProductItemList } from "../components";
+import {
+  ProductItemList,
+  SelectedProductItem,
+} from "../components/ui/products";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import CurrencyInput from "react-native-currency-input";
+import CurrencyInput, { formatNumber } from "react-native-currency-input";
+
+import StackScreen from "../components/StackScreen";
+import { Product } from "../types";
 
 export default function CreateTransaction() {
   const supabase = useSupabaseClient();
@@ -33,32 +40,32 @@ export default function CreateTransaction() {
 
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
-  const [products, setProdcuts] = useState<any | null>(null);
+  const [products, setProdcuts] = useState<any | Product[]>([]);
 
   const [modalVisible, setModalVisible] = React.useState(false);
-  const [size, setSize] = React.useState("md");
 
+  const [selected, setSelected] = useState([]);
+
+  //gfbjfgfg
   useEffect(() => {
     supabase
       .from("products")
       .select()
       .then(({ data }) => {
-        setProdcuts(data);
+        const mappedProdcuts = data?.map((item) => {
+          item.isSelected = false;
+          return item;
+        });
+        setProdcuts(mappedProdcuts);
       });
   }, []);
 
-  /*   useEffect(() => {
-    const ab = async () => {
-      const { data } = await supabase.from("products").select("*");
+  useEffect(() => {
+    const selected = products.filter((item: Product) => item.isSelected);
+    setSelected(selected);
 
-      if (data) {
-        console.log(data);
-        setProdcuts(data);
-      }
-    };
-
-    ab();
-  }, []); */
+    console.log(selected.length);
+  }, [products]);
 
   const schema = yup.object().shape({
     transactionName: yup
@@ -102,7 +109,7 @@ export default function CreateTransaction() {
     setShow(true);
   };
 
-  console.log(products);
+  //console.log(selected);
   if (!products) return <SplashScreen />;
   return (
     <Box flex={1} px="3" py="3" bg="white">
@@ -213,27 +220,37 @@ export default function CreateTransaction() {
           <Box
             borderRadius="lg"
             borderWidth="2"
-            p={8}
-            borderStyle="dashed"
-            borderColor="primary.300"
+            p={3}
+            borderColor={selected.length > 0 ? "warmGray.200" : "red.100"}
           >
-            <Center>
-              <IconButton
-                size="lg"
-                _icon={{
-                  as: AntDesign,
-                  name: "pluscircleo",
-                }}
-                onPress={() => setModalVisible(true)}
-              />
-              <MText>Add Product</MText>
-            </Center>
+            {selected.length <= 0 ? (
+              <Center p="8">
+                <IconButton
+                  size="lg"
+                  _icon={{
+                    as: AntDesign,
+                    name: "pluscircleo",
+                  }}
+                  onPress={() => setModalVisible(true)}
+                />
+                <MText>Select Product(s)</MText>
+              </Center>
+            ) : (
+              selected.map((item: any) => (
+                <SelectedProductItem
+                  item={item}
+                  products={products}
+                  setProdcuts={setProdcuts}
+                />
+              ))
+            )}
           </Box>
+
           <MButton
             onPress={() => router.push("/add-product")}
             _text={{ fontSize: 18 }}
           >
-            Add product
+            Add new product
           </MButton>
           <MButton
             isLoading={loading}
@@ -256,7 +273,11 @@ export default function CreateTransaction() {
               <Modal.Header>Select Products</Modal.Header>
               <Modal.Body>
                 <Box flex={1}>
-                  {products && <ProductItemList products={products} />}
+                  <ProductItemList
+                    products={products}
+                    setSelected={setSelected}
+                    setProdcuts={setProdcuts}
+                  />
                 </Box>
               </Modal.Body>
               <Modal.Footer>

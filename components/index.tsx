@@ -1,1 +1,1 @@
-export { default as ProductItemList } from "./ProductItemList";
+export { default as ProductItemList } from "./ui/products/ProductItemList";

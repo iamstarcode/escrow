@@ -1,20 +1,20 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Slot, SplashScreen, Stack } from 'expo-router';
-import * as Font from 'expo-font';
+import React, { useCallback, useEffect, useState } from "react";
+import { Slot, SplashScreen, Stack } from "expo-router";
+import * as Font from "expo-font";
 
-import { StatusBar } from 'expo-status-bar';
-import { NativeBaseProvider, Box } from 'native-base';
-import { AuthProvider } from './(auth)/provider';
+import { StatusBar } from "expo-status-bar";
+import { NativeBaseProvider, Box } from "native-base";
+import { AuthProvider } from "./(auth)/provider";
 
-import { SessionContextProvider } from '@supabase/auth-helpers-react';
-import { supabase } from '../lib/supabase';
+import { SessionContextProvider } from "@supabase/auth-helpers-react";
+import { supabase } from "../lib/supabase";
 
-import { theme } from '../config/native-base-config';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from "../config/native-base-config";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const unstable_settings = {
   // Ensure any route can link back to `/`
-  initialRouteName: '/',
+  initialRouteName: "/",
 };
 
 export default function Layout() {
@@ -29,10 +29,10 @@ export default function Layout() {
 
         //Check for refresh token if any, continue until next until next API request hits
         await Font.loadAsync({
-          EuclidCircularARegular: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Regular.ttf'),
-          EuclidCircularABold: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Bold.ttf'),
-          EuclidCircularAMedium: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Medium.ttf'),
-          EuclidCircularALight: require('../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Light.ttf'),
+          EuclidCircularARegular: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Regular.ttf"),
+          EuclidCircularABold: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Bold.ttf"),
+          EuclidCircularAMedium: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Medium.ttf"),
+          EuclidCircularALight: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Light.ttf"),
         });
       } catch (e) {
         console.warn(e);
@@ -64,11 +64,11 @@ export default function Layout() {
     <SessionContextProvider supabaseClient={supabase}>
       <AuthProvider>
         <NativeBaseProvider theme={theme}>
-          <Box onLayout={onLayoutRootView} flex={1} bg='white'>
+          <Box onLayout={onLayoutRootView} flex={1} bg="white">
             <StatusBar
-              style='inverted'
+              style="inverted"
               animated={true}
-              backgroundColor='#3333334a'
+              backgroundColor="#3333334a"
               translucent={true}
             />
             <Stack screenOptions={{ headerShown: false }} />

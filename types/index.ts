@@ -1,5 +1,5 @@
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { NavigationProp } from '@react-navigation/core';
+import type { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { NavigationProp } from "@react-navigation/core";
 
 export type RootStackParamList = {
   SignIn: undefined;
@@ -7,11 +7,17 @@ export type RootStackParamList = {
   Home: undefined;
   ChangePassword: undefined;
   Profile: { userId: string };
-  Feed: { sort: 'latest' | 'top' } | undefined;
+  Feed: { sort: "latest" | "top" } | undefined;
 };
 
 export interface ScreenProps {
   navigation?: any;
   route?: any;
 }
-export type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
+export type Props = NativeStackScreenProps<RootStackParamList, "Profile">;
+
+export type Product = {
+  id: number;
+  isSelected: boolean;
+  [x: string]: any;
+};

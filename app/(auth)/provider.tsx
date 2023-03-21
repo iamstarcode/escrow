@@ -1,18 +1,18 @@
-import { useContext, useEffect, useState } from 'react';
-import { createContext } from 'react';
-import React from 'react';
+import { useContext, useEffect, useState } from "react";
+import { createContext } from "react";
+import React from "react";
 
-import { useSupabaseClient } from '@supabase/auth-helpers-react';
+import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import {
   AuthSession,
   AuthUser,
   SupabaseClient,
   createClient,
-} from '@supabase/supabase-js';
-import { supabaseAnonKey, supabaseUrl } from '../../lib/supabase';
-import { useRouter, useSegments, usePathname, SplashScreen } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_STORAGE_KEY } from '../../config/constants';
+} from "@supabase/supabase-js";
+import { supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
+import { useRouter, useSegments, usePathname, SplashScreen } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SUPABASE_STORAGE_KEY } from "../../config/constants";
 
 export interface IAuthState {
   accessToken: string;
@@ -21,7 +21,7 @@ export interface IAuthState {
 
 export interface AuthContextType {
   session: AuthSession | null | undefined;
-  getAuthSupabaseClient: () => Promise<SupabaseClient<any, 'public', any>>;
+  getAuthSupabaseClient: () => Promise<SupabaseClient<any, "public", any>>;
 }
 
 interface Props {
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: Props) {
       async (_event, session) => {
         setSession(session);
         //console.log(`${_event}:event raised`);
-        if (_event == 'TOKEN_REFRESHED') {
+        if (_event == "TOKEN_REFRESHED") {
           //Handle Accordinngly
         }
       }
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: Props) {
   }, []);
 
   useEffect(() => {
-    const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === "(auth)";
 
     if (
       // If the user is not signed in and the initial segment is not anything in the auth group.
@@ -73,20 +73,20 @@ export function AuthProvider({ children }: Props) {
         if (authStorage) {
           //if we have a storage dont flash to sign in
         } else {
-          router.replace('/sign-in');
+          //console.log(path);
+          router.replace("/sign-in");
         }
       });
     } else if (session?.user && inAuthGroup) {
       // Redirect away from the sign-in page.
-
-      router.replace('/');
+      router.replace("/");
     }
   }, [session, segments]);
 
   const getAuthSupabaseClient = async () => {
     const session = await supabase.auth.getSession();
     const accessToken = session?.data.session?.access_token;
-    console.log('s', accessToken);
+    console.log("s", accessToken);
     const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: {
