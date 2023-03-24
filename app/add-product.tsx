@@ -9,20 +9,24 @@ import {
   Image,
   Input,
   HStack,
+  Center,
+  Icon,
+  IconButton,
+  View,
 } from "native-base";
+import { AntDesign } from "@expo/vector-icons";
 
 import { ScreenProps } from "../types";
 
 import { FlashList } from "@shopify/flash-list";
 
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import useAxios from "../hooks/usesAxios";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 import { useRouter } from "expo-router";
-import { MButton, MInput, MTextArea } from "../components/ui";
+import { MButton, MInput, MText, MTextArea } from "../components/ui";
 
-import { NumberFormatBase, NumericFormat } from "react-number-format";
 import CurrencyInput, { formatNumber } from "react-native-currency-input";
 
 import * as ImagePicker from "expo-image-picker";
@@ -32,11 +36,12 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
+import { Database } from "../lib/database.types";
 
 export interface IHomeProps extends ScreenProps {}
 
 export default function CreateTransaction({}: IHomeProps) {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabaseClient<Database>();
   const router = useRouter();
 
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
@@ -44,7 +49,7 @@ export default function CreateTransaction({}: IHomeProps) {
   const { authAxios } = useAxios();
 
   const [loading, setLoading] = useState(false);
-  const [images, setImage] = useState<any>(null);
+  const [images, setImages] = useState<any>([]);
 
   const schema = yup.object().shape({
     name: yup
@@ -60,22 +65,31 @@ export default function CreateTransaction({}: IHomeProps) {
       .required("Please enter a price")
       .moreThan(5, "value too small")
       .typeError(""),
+    images: yup.number().moreThan(0, "Please select at least one image"),
   });
 
   const {
     control,
     handleSubmit,
     setValue,
-    formState: { isValid },
+    getValues,
+    formState: { isValid, errors },
   } = useForm({
     mode: "onChange",
     defaultValues: {
       name: "",
       description: "",
       price: null,
+      images: 0,
     },
     resolver: yupResolver(schema),
   });
+
+  const removeHandler = useCallback((id: any) => {
+    setImages((prev: any) => {
+      return prev.filter((item: any) => !(id === item.assetId));
+    });
+  }, []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -85,19 +99,14 @@ export default function CreateTransaction({}: IHomeProps) {
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-    console.log(data);
-
     const { data: user } = await supabase.auth.getUser();
-
-    //console.log(JSON.parse(session ?? '').user.id);
     const { error, status } = await supabase.from("products").insert({
       name: data.name,
-      user_id: user.user?.id,
+      user_id: user.user?.id ?? "",
       description: data.description,
       price: data.price,
       images,
     });
-    //   .eq('id', JSON.parse(session ?? '').user.id);
 
     setLoading(false);
 
@@ -122,25 +131,47 @@ export default function CreateTransaction({}: IHomeProps) {
       quality: 1,
     });
 
-    /*     let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      //aspect: [4, 3],
-
-      quality: 1,
-    });
- */
-    // console.log(result.assets[0]);
-
     if (!result.canceled) {
-      //setImage(result.assets[0].uri);
-      setImage(result.assets);
-    }
+      //setImages(result.assets[0].uri);
+      console.log(result.assets);
+      //const assets = [...result.assets];
+      const imagesMapped = result.assets.map((item: any) => {
+        item.isSelected = true;
+        return item;
+      });
 
-    console.log(images);
+      setImages(imagesMapped);
+      setValue("images", imagesMapped.length);
+    }
   };
+
+  console.log(images.length, getValues("images"));
+
   //if (!user) return <SplashScreen />;
 
+  const Item = memo(({ id }: { id: number }) => {
+    return (
+      <FlashList
+        estimatedItemSize={100}
+        data={images}
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{
+          padding: 2,
+        }}
+        renderItem={({ item, index }: any) => (
+          <Image
+            borderRadius="lg"
+            margin={2}
+            key={index}
+            alt="image"
+            source={{ uri: item.uri }}
+            style={{ width: 100, height: 100 }}
+          />
+        )}
+      />
+    );
+  });
   return (
     <Box flex={1} px="3" py="3" bg="white">
       <StackScreen title="Add Product" headerShown={true} />
@@ -226,33 +257,87 @@ export default function CreateTransaction({}: IHomeProps) {
               </FormControl>
             )}
           />
+
+          {images.length <= 0 && (
+            <Box
+              p="3"
+              borderStyle="dashed"
+              borderRadius="lg"
+              borderWidth={2}
+              borderColor="primary.300"
+            >
+              <Center>
+                <IconButton
+                  onPress={() => router.push("/add-product")}
+                  icon={
+                    <Icon
+                      borderColor="warmGray.200"
+                      as={AntDesign}
+                      size={10}
+                      name="pluscircle"
+                      color="primary.300"
+                      onPress={pickImage}
+                    />
+                  }
+                ></IconButton>
+                <MText>SELECT IMAGES</MText>
+              </Center>
+            </Box>
+          )}
+
+          <HStack height={110}>
+            <FlashList
+              estimatedItemSize={5}
+              data={images}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingHorizontal: 2,
+              }}
+              renderItem={({ item, index }: any) => (
+                <Box position="relative">
+                  <Image
+                    borderRadius="lg"
+                    margin={2}
+                    key={index}
+                    alt="image"
+                    source={{ uri: item.uri }}
+                    height={100}
+                    width={100}
+                  />
+                  <IconButton
+                    position="absolute"
+                    right="0"
+                    top="0"
+                    borderRadius="full"
+                    p="1"
+                    bg="danger.500"
+                    icon={
+                      <Icon
+                        size={4}
+                        name="close"
+                        color="white"
+                        borderColor="warmGray.200"
+                        as={AntDesign}
+                        onPress={() => removeHandler(item.assetId)}
+                      />
+                    }
+                  />
+                </Box>
+              )}
+            />
+          </HStack>
+
+          {/*          <MButton onPress={pickImage}>dbcec</MButton> */}
           <MButton
             isLoading={loading}
             isDisabled={!isValid}
             onPress={handleSubmit(onSubmit)}
             _text={{ fontSize: 18 }}
-            mt="24"
+            mt="18"
           >
             Add product
           </MButton>
-
-          <MButton onPress={pickImage}>Pick an image from camera roll</MButton>
-
-          <FlashList
-            estimatedItemSize={200}
-            data={images}
-            horizontal={true}
-            style={{ margin: 3 }}
-            renderItem={({ item, index }: any) => (
-              <Image
-                margin={2}
-                key={index}
-                alt="image"
-                source={{ uri: item.uri }}
-                style={{ width: 100, height: 100 }}
-              />
-            )}
-          />
         </VStack>
       </ScrollView>
     </Box>

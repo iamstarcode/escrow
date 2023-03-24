@@ -5,16 +5,21 @@ import {
   Center,
   FormControl,
   HStack,
-  IconButton,
   Modal,
   ScrollView,
   TextArea,
   Image,
   VStack,
   Checkbox,
+  IconButton,
+  Icon,
 } from "native-base";
 import { SplashScreen, useRouter } from "expo-router";
-import { Fontisto, AntDesign } from "@expo/vector-icons";
+import {
+  Fontisto,
+  AntDesign,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import * as yup from "yup";
@@ -33,9 +38,11 @@ import CurrencyInput, { formatNumber } from "react-native-currency-input";
 
 import StackScreen from "../components/StackScreen";
 import { Product } from "../types";
+import { Database } from "../lib/database.types";
+import { getProducts } from "../lib/supabase";
 
 export default function CreateTransaction() {
-  const supabase = useSupabaseClient();
+  const supabase = useSupabaseClient<Database>();
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -44,28 +51,34 @@ export default function CreateTransaction() {
 
   const [modalVisible, setModalVisible] = React.useState(false);
 
-  const [selected, setSelected] = useState([]);
+  const [selected, setSelected] = useState<Product[]>([]);
 
-  //gfbjfgfg
   useEffect(() => {
     supabase
       .from("products")
       .select()
       .then(({ data }) => {
-        const mappedProdcuts = data?.map((item) => {
+        const mappedProdcuts = data?.map((item: any) => {
           item.isSelected = false;
           return item;
         });
+
         setProdcuts(mappedProdcuts);
       });
   }, []);
 
   useEffect(() => {
-    const selected = products.filter((item: Product) => item.isSelected);
+    const selected = products?.filter((item: Product) => item.isSelected);
     setSelected(selected);
-
-    console.log(selected.length);
   }, [products]);
+
+  useEffect(() => {
+    let totalPayable = 0;
+    selected?.map((item: Product) => {
+      totalPayable += item.price;
+    });
+    setValue("amountPayable", totalPayable);
+  }, [selected]);
 
   const schema = yup.object().shape({
     transactionName: yup
@@ -93,15 +106,24 @@ export default function CreateTransaction() {
   });
 
   const onSubmit = async (data: any) => {
+    //console.log(data);
     setLoading(true);
+
+    const { data: user } = await supabase.auth.getUser();
+
+    //get a user using it's username
+    //console.log(products[0].id);
+    /*  const { data: res } = supabase.from("transactions").insert({
+      seller_id: user.user?.id,
+      buyer_id: buyer.id
+    }); */
 
     setLoading(false);
   };
 
-  const onDateChange = (event: any, selectedDate: any) => {
+  const onDateChange = (_: any, selectedDate: any) => {
     const currentDate = selectedDate;
     setShow(false);
-    //setDate(currentDate);
     setValue("deliveryDate", currentDate);
   };
 
@@ -109,8 +131,7 @@ export default function CreateTransaction() {
     setShow(true);
   };
 
-  //console.log(selected);
-  if (!products) return <SplashScreen />;
+  //if (!products) return <SplashScreen />;
   return (
     <Box flex={1} px="3" py="3" bg="white">
       <StackScreen title="Create Transactions" headerShown={true} />
@@ -196,9 +217,10 @@ export default function CreateTransaction() {
                   onChange={onChange}
                   onBlur={onBlur}
                   delimiter=","
-                  prefix="#"
+                  prefix="₦"
                   precision={0}
                   minValue={0}
+                  editable={false}
                   placeholder="Enter price"
                   style={{
                     padding: 16,
@@ -208,6 +230,7 @@ export default function CreateTransaction() {
                     backgroundColor: "#ffffff",
                     fontSize: 18,
                     fontWeight: "bold",
+                    color: "black",
                   }}
                 />
                 <FormControl.ErrorMessage fontSize="xl">
@@ -217,47 +240,61 @@ export default function CreateTransaction() {
             )}
           />
 
-          <Box
-            borderRadius="lg"
-            borderWidth="2"
-            p={3}
-            borderColor={selected.length > 0 ? "warmGray.200" : "red.100"}
-          >
-            {selected.length <= 0 ? (
-              <Center p="8">
+          <Box p={0}>
+            {selected?.length > 0 ? (
+              <VStack space={3}>
+                {selected &&
+                  selected.map((item: Product) => (
+                    <SelectedProductItem
+                      key={item.id}
+                      item={item}
+                      products={products}
+                      setProdcuts={setProdcuts}
+                    />
+                  ))}
+              </VStack>
+            ) : (
+              <Center
+                borderColor={selected?.length > 0 ? "warmGray.200" : "red.100"}
+                borderRadius="lg"
+                borderWidth="2"
+                p="8"
+              >
                 <IconButton
                   size="lg"
                   _icon={{
-                    as: AntDesign,
-                    name: "pluscircleo",
+                    as: MaterialCommunityIcons,
+                    name: "selection",
                   }}
                   onPress={() => setModalVisible(true)}
                 />
                 <MText>Select Product(s)</MText>
               </Center>
-            ) : (
-              selected.map((item: any) => (
-                <SelectedProductItem
-                  item={item}
-                  products={products}
-                  setProdcuts={setProdcuts}
-                />
-              ))
             )}
           </Box>
 
-          <MButton
-            onPress={() => router.push("/add-product")}
-            _text={{ fontSize: 18 }}
-          >
-            Add new product
-          </MButton>
+          <Center>
+            <IconButton
+              onPress={() => router.push("/add-product")}
+              icon={
+                <Icon
+                  borderColor="warmGray.200"
+                  as={AntDesign}
+                  size={10}
+                  name="pluscircle"
+                  color="primary.300"
+                />
+              }
+            ></IconButton>
+            <MText>ADD NEW PRODUCT</MText>
+          </Center>
+
           <MButton
             isLoading={loading}
             isDisabled={!isValid}
             onPress={handleSubmit(onSubmit)}
             _text={{ fontSize: 18 }}
-            mt="24"
+            mt="18"
           >
             Create Transaction
           </MButton>
@@ -275,31 +312,10 @@ export default function CreateTransaction() {
                 <Box flex={1}>
                   <ProductItemList
                     products={products}
-                    setSelected={setSelected}
                     setProdcuts={setProdcuts}
                   />
                 </Box>
               </Modal.Body>
-              <Modal.Footer>
-                <HStack space={2}>
-                  <MButton
-                    variant="ghost"
-                    colorScheme="blueGray"
-                    onPress={() => {
-                      setModalVisible(false);
-                    }}
-                  >
-                    Cancel
-                  </MButton>
-                  <MButton
-                    onPress={() => {
-                      setModalVisible(false);
-                    }}
-                  >
-                    Save
-                  </MButton>
-                </HStack>
-              </Modal.Footer>
             </Modal.Content>
           </Modal>
         </VStack>

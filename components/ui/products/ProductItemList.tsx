@@ -11,7 +11,6 @@ import { TouchableOpacity } from "react-native";
 
 export interface IProductItemListProps {
   products: any;
-  setSelected: any;
   setProdcuts: any;
 }
 
@@ -19,20 +18,17 @@ export default function ProductItemList({
   products,
   setProdcuts,
 }: IProductItemListProps) {
-  const selectHandler = useCallback(
-    (id: any) => {
-      setProdcuts((prev: any[]) => {
-        return prev.map((item: Product) =>
-          item.id === id ? { ...item, isSelected: !item.isSelected } : item
-        );
-      });
-    },
-    [products]
-  );
+  const selectHandler = useCallback((id: any) => {
+    setProdcuts((prev: any[]) => {
+      return prev.map((item: Product) =>
+        item.id === id ? { ...item, isSelected: !item.isSelected } : item
+      );
+    });
+  }, []);
 
   return (
     <FlashList
-      estimatedItemSize={200}
+      estimatedItemSize={5}
       estimatedListSize={{ height: 200, width: 200 }}
       data={products}
       extraData={products}
@@ -67,7 +63,7 @@ const Item = memo(
               {item.name}
             </MText>
             <MText color="coolGray.500">
-              {formatNumber(item.price, { delimiter: ",", prefix: "#" })}
+              {formatNumber(item.price, { delimiter: ",", prefix: "₦" })}
             </MText>
           </VStack>
           <Checkbox

@@ -1,5 +1,6 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { NavigationProp } from "@react-navigation/core";
+import { ProductResponseSuccess } from "../lib/supabase";
 
 export type RootStackParamList = {
   SignIn: undefined;
@@ -17,7 +18,6 @@ export interface ScreenProps {
 export type Props = NativeStackScreenProps<RootStackParamList, "Profile">;
 
 export type Product = {
-  id: number;
   isSelected: boolean;
   [x: string]: any;
-};
+} & ProductResponseSuccess;
