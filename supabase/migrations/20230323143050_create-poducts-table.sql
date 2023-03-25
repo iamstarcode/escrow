@@ -3,7 +3,7 @@ create table public.products(
   user_id uuid not null references auth.users on delete cascade,
   name text not null,
   description text not null,
-  images jsonb not null,
+  images text[] not null,
   price text not null,
 
   primary key(id)

@@ -16,6 +16,7 @@ import {
 } from "native-base";
 import { AntDesign } from "@expo/vector-icons";
 
+import * as Crypto from "expo-crypto";
 import { ScreenProps } from "../types";
 
 import { FlashList } from "@shopify/flash-list";
@@ -37,9 +38,16 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { Database } from "../lib/database.types";
+import { generateRandomString } from "../helpers";
 
 export interface IHomeProps extends ScreenProps {}
 
+interface Image {
+  assetId: string;
+  uri: string;
+  isSelected: boolean;
+  base64: string;
+}
 export default function CreateTransaction({}: IHomeProps) {
   const supabase = useSupabaseClient<Database>();
   const router = useRouter();
@@ -49,7 +57,7 @@ export default function CreateTransaction({}: IHomeProps) {
   const { authAxios } = useAxios();
 
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<any>([]);
+  const [images, setImages] = useState<any | Image[]>([]);
 
   const schema = yup.object().shape({
     name: yup
@@ -87,7 +95,9 @@ export default function CreateTransaction({}: IHomeProps) {
 
   const removeHandler = useCallback((id: any) => {
     setImages((prev: any) => {
-      return prev.filter((item: any) => !(id === item.assetId));
+      const filltered = prev.filter((item: any) => !(id === item.assetId));
+      setValue("images", filltered.length, { shouldValidate: true });
+      return filltered;
     });
   }, []);
 
@@ -99,13 +109,23 @@ export default function CreateTransaction({}: IHomeProps) {
 
   const onSubmit = async (data: any) => {
     setLoading(true);
+
+    let imageURIs: any[] = [];
+
+    images.map((image: { uri: any }) => {
+      imageURIs.push(image.uri);
+    });
+
+    const srcs = await uploadImageToCloudiinary(images);
+
+    console.log("srcs", srcs);
     const { data: user } = await supabase.auth.getUser();
     const { error, status } = await supabase.from("products").insert({
       name: data.name,
       user_id: user.user?.id ?? "",
       description: data.description,
       price: data.price,
-      images,
+      images: srcs,
     });
 
     setLoading(false);
@@ -127,27 +147,63 @@ export default function CreateTransaction({}: IHomeProps) {
       //allowsEditing: true,
       //aspect: [4, 3],
       allowsMultipleSelection: true,
-
-      quality: 1,
+      quality: 0.5,
+      base64: true,
     });
 
     if (!result.canceled) {
       //setImages(result.assets[0].uri);
-      console.log(result.assets);
+      //console.log(result.assets[0].uri);
       //const assets = [...result.assets];
       const imagesMapped = result.assets.map((item: any) => {
-        item.isSelected = true;
-        return item;
+        //item.isSelected = true;
+        //return item;
+        const newItem: Image = {
+          assetId: item.assetId,
+          uri: item.uri,
+          isSelected: true,
+          base64: item.base64,
+        };
+        return newItem;
       });
 
       setImages(imagesMapped);
-      setValue("images", imagesMapped.length);
+      setValue("images", imagesMapped.length, { shouldValidate: true });
     }
   };
 
-  console.log(images.length, getValues("images"));
+  const uploadImageToCloudiinary = async (images: Image[]) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  //if (!user) return <SplashScreen />;
+    let apiUrl = "https://api.cloudinary.com/v1_1/escrow/image/upload";
+    let srcs: any[] = [];
+
+    images.map((image: Image) => {
+      const file = `data:image/jpg;base64,${image.base64}`;
+      let data = {
+        file,
+        upload_preset: "products_unsigned",
+        public_id: `${user?.id}/${generateRandomString(20)}`,
+      };
+
+      fetch(apiUrl, {
+        body: JSON.stringify(data),
+        headers: {
+          "content-type": "application/json",
+        },
+        method: "POST",
+      })
+        .then(async (r) => {
+          let data = await r.json();
+          srcs.push(data.secure_url);
+        })
+        .catch((err) => console.log(err));
+    });
+
+    return srcs;
+  };
 
   const Item = memo(({ id }: { id: number }) => {
     return (

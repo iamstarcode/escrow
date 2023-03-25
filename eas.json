@@ -15,6 +15,7 @@
       }
     },
     "preview2": {
+      "distribution": "internal",
       "android": {
         "gradleCommand": ":app:assembleRelease"
       }

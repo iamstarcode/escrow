@@ -33,7 +33,7 @@ module.exports = {
     },
     extra: {
       eas: {
-        projectId: "40045458-2c13-49bc-9745-2576e383af6a",
+        projectId: "1139c89f-9d56-43e2-811e-c94eb09e29b7",
       },
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY,

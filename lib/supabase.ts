@@ -29,7 +29,7 @@ export const getSession = async () => {
   };
 };
 
-export const getProducts = async (query: string) => {
+export const getProducts = async () => {
   return await supabase.from("products").select(`*`);
 };
 
