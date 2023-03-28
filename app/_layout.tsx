@@ -6,11 +6,16 @@ import { StatusBar } from "expo-status-bar";
 import { NativeBaseProvider, Box } from "native-base";
 import { AuthProvider } from "./(auth)/provider";
 
+import { SWRConfig } from "swr";
+
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { supabase } from "../lib/supabase";
 
 import { theme } from "../config/native-base-config";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert } from "react-native";
+
+import { Provider } from "react-redux";
+import { store } from "../store/store";
 
 export const unstable_settings = {
   // Ensure any route can link back to `/`
@@ -61,20 +66,42 @@ export default function Layout() {
   }
 
   return (
-    <SessionContextProvider supabaseClient={supabase}>
-      <AuthProvider>
-        <NativeBaseProvider theme={theme}>
-          <Box onLayout={onLayoutRootView} flex={1} bg="white">
-            <StatusBar
-              style="inverted"
-              animated={true}
-              backgroundColor="#3333334a"
-              translucent={true}
-            />
-            <Stack screenOptions={{ headerShown: false }} />
-          </Box>
-        </NativeBaseProvider>
-      </AuthProvider>
-    </SessionContextProvider>
+    <SWRConfig
+      value={{
+        provider: () => new Map(),
+        isOnline() {
+          /* Customize the network state detector */
+          return true;
+        },
+        isVisible() {
+          /* Customize the visibility state detector */
+          return true;
+        },
+        initFocus(callback) {
+          /* Register the listener with your state provider */
+        },
+        initReconnect(callback) {
+          /* Register the listener with your state provider */
+        },
+      }}
+    >
+      <Provider store={store}>
+        <SessionContextProvider supabaseClient={supabase}>
+          <AuthProvider>
+            <NativeBaseProvider theme={theme}>
+              <Box onLayout={onLayoutRootView} flex={1} bg="white">
+                <StatusBar
+                  style="inverted"
+                  animated={true}
+                  backgroundColor="#3333334a"
+                  translucent={true}
+                />
+                <Stack screenOptions={{ headerShown: false }} />
+              </Box>
+            </NativeBaseProvider>
+          </AuthProvider>
+        </SessionContextProvider>
+      </Provider>
+    </SWRConfig>
   );
 }

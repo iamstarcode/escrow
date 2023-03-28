@@ -36,25 +36,28 @@ export interface Database {
     Tables: {
       products: {
         Row: {
+          can_edit: boolean
           description: string
           id: number
-          images: Json
+          images: string[]
           name: string
           price: string
           user_id: string
         }
         Insert: {
+          can_edit?: boolean
           description: string
           id?: never
-          images: Json
+          images: string[]
           name: string
           price: string
           user_id: string
         }
         Update: {
+          can_edit?: boolean
           description?: string
           id?: never
-          images?: Json
+          images?: string[]
           name?: string
           price?: string
           user_id?: string
@@ -114,7 +117,13 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      change_user_password: {
+        Args: {
+          current_plain_password: string
+          new_plain_password: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

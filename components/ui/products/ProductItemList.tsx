@@ -1,14 +1,27 @@
 import React, { memo, useCallback } from "react";
 import { useState } from "react";
 import { FlashList } from "@shopify/flash-list";
-import { Checkbox, HStack, Image, VStack, Text, View } from "native-base";
+import {
+  Checkbox,
+  HStack,
+  Image,
+  VStack,
+  Text,
+  View,
+  Spinner,
+} from "native-base";
 import { MText } from "..";
+import { Image as ImageRN } from "react-native";
 
 import _ from "lodash";
 import { formatNumber } from "react-native-currency-input";
 import { Product } from "../../../types";
 import { TouchableOpacity } from "react-native";
 
+import { Cloudinary } from "@cloudinary/url-gen";
+
+const loadingGif = require("../../../assets/img/image-loading-improved.gif");
+const loadingGifURI = ImageRN.resolveAssetSource(loadingGif).uri;
 export interface IProductItemListProps {
   products: any;
   setProdcuts: any;
@@ -33,8 +46,8 @@ export default function ProductItemList({
       data={products}
       extraData={products}
       keyExtractor={(item: any) => item.id}
-      renderItem={({ item }: any) => (
-        <Item item={item} onCheckHandler={selectHandler} />
+      renderItem={({ item, index }) => (
+        <Item item={item} index={index} onCheckHandler={selectHandler} />
       )}
     />
   );
@@ -43,27 +56,42 @@ export default function ProductItemList({
 const Item = memo(
   ({
     item,
+    index,
     onCheckHandler,
   }: {
     item: Product;
+    index: number;
     onCheckHandler: (id: any) => void;
   }) => {
+    const cld = new Cloudinary({
+      cloud: {
+        cloudName: "escrow",
+      },
+    });
+
     return (
       <HStack space={2} py={2}>
         <Image
           key={item.id}
           alt="Image"
           borderRadius="lg"
-          source={{ uri: item.images[0].uri }}
+          source={{ uri: cld.image(item.images[0]).createCloudinaryURL() }}
+          loadingIndicatorSource={{
+            uri: loadingGifURI,
+          }}
           style={{ width: 64, height: 64 }}
         />
+
         <HStack flex={1} justifyContent="space-between">
           <VStack>
             <MText color="black" fontSize={18} fontWeight="bold">
               {item.name}
             </MText>
             <MText color="coolGray.500">
-              {formatNumber(item.price, { delimiter: ",", prefix: "₦" })}
+              {formatNumber(parseInt(item?.price), {
+                delimiter: ",",
+                prefix: "₦",
+              })}
             </MText>
           </VStack>
           <Checkbox

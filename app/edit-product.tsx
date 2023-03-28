@@ -1,36 +1,30 @@
 import * as React from "react";
+import { Image as ImageRN } from "react-native";
 import {
   Box,
   FormControl,
   ScrollView,
-  TextArea,
-  Text,
   VStack,
   Image,
-  Input,
   HStack,
   Center,
   Icon,
   IconButton,
-  View,
 } from "native-base";
+import { useRouter, useSearchParams } from "expo-router";
 import { AntDesign } from "@expo/vector-icons";
 
-import { useSWRConfig } from "swr";
-
-import * as Crypto from "expo-crypto";
-import { ScreenProps } from "../types";
+import useSWR, { useSWRConfig } from "swr";
 
 import { FlashList } from "@shopify/flash-list";
 
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import useAxios from "../hooks/usesAxios";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
-import { useRouter } from "expo-router";
 import { MButton, MInput, MText, MTextArea } from "../components/ui";
 
-import CurrencyInput, { formatNumber } from "react-native-currency-input";
+import CurrencyInput from "react-native-currency-input";
 
 import * as ImagePicker from "expo-image-picker";
 
@@ -40,11 +34,22 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { Database } from "../lib/database.types";
+import { ProductResponseSuccess, getSingleProduct } from "../lib/supabase";
 import { generateRandomString } from "../helpers";
+import { SWR_GET_PRODUCT } from "../config/constants";
+import Spinner from "../components/Spinner";
+const loadingGif = require("../assets/img/image-loading-improved.gif");
 import Constants from "expo-constants";
-import { SWR_GET_PRODUCTS } from "../config/constants";
+import { Cloudinary, CloudinaryImage } from "@cloudinary/url-gen";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  selectProduct,
+  selectSelected,
+  setSelected,
+  setSelectedProduct,
+} from "../store/features/select/selectedSlice";
 
-export interface IHomeProps extends ScreenProps {}
+const loadingGifURI = ImageRN.resolveAssetSource(loadingGif).uri;
 
 interface Image {
   assetId: string;
@@ -52,19 +57,42 @@ interface Image {
   isSelected: boolean;
   base64: string;
 }
-export default function CreateTransaction({}: IHomeProps) {
-  const apiUrl = Constants.expoConfig?.extra?.apiUrl;
 
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: "escrow",
+  },
+});
+
+const apiUrl = Constants.expoConfig?.extra?.apiUrl;
+
+export default function CreateTransaction() {
   const supabase = useSupabaseClient<Database>();
+  const dispatch = useAppDispatch();
+
   const router = useRouter();
   const { mutate } = useSWRConfig();
 
+  const param = useSearchParams(); //
+  const productId = param?.productId;
+  const index = param?.index;
+  const select = useAppSelector(selectSelected);
+
+  const [product, setProdcut] = useState<undefined | ProductResponseSuccess>(
+    undefined
+  );
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
-
-  const { authAxios } = useAxios();
-
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<any | Image[]>([]);
+
+  const {
+    data,
+    isLoading: isLoadingProduct,
+    mutate: mutateProduct,
+  } = useSWR(
+    [`${SWR_GET_PRODUCT}/${productId}`, productId, true],
+    getSingleProduct
+  );
 
   const schema = yup.object().shape({
     name: yup
@@ -94,11 +122,23 @@ export default function CreateTransaction({}: IHomeProps) {
     defaultValues: {
       name: "",
       description: "",
-      price: null,
+      price: "",
       images: 0,
     },
     resolver: yupResolver(schema),
   });
+
+  useEffect(() => {
+    //console.log("uatedt");
+    const product = data?.data;
+    setProdcut(product);
+    setValue("name", product?.name ?? "");
+    setValue("description", product?.description ?? "");
+    setValue("price", product?.price ?? "", { shouldValidate: true });
+    setValue("images", product?.images?.length ?? 0);
+  }, [data]);
+
+  //console.log("product", product?.images);
 
   const removeHandler = useCallback((id: any) => {
     setImages((prev: any) => {
@@ -108,44 +148,120 @@ export default function CreateTransaction({}: IHomeProps) {
     });
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    //setUser(null);
-    router.replace("/sign-in");
+  const removeSavedImage = async (index: number) => {
+    let length = product?.images?.length ?? 1;
+    if (length <= 1) {
+      Alert.alert("Error", "You have to have at least one image");
+      return;
+    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    let deleteURL = `${apiUrl}/cloudinary/delete`;
+
+    setLoading(true);
+
+    const images: any = product?.images ?? [];
+    const afterDelete = images?.filter(
+      (image: any) => image !== product?.images[index]
+    );
+
+    let data = {
+      publicId: images[index],
+    };
+
+    try {
+      const res = await fetch(deleteURL, {
+        body: JSON.stringify(data),
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        method: "POST",
+      });
+      await supabase
+        .from("products")
+        .update({
+          images: afterDelete,
+        })
+        .eq("id", product?.id);
+
+      mutate(SWR_GET_PRODUCT);
+      mutateProduct();
+      //   dispatch(setSelectedProduct())
+    } catch (error) {}
+
+    //console.log(afterDelete);
+    //if(product?.images )
+    const geFolders = "https://api.cloudinary.com/v1_1/escrow/resources";
+
+    /*  try {
+      const fetcher = await fetch(apiUrl, {
+        headers: {
+          // "content-type": "application/json",
+        },
+        method: "POST",
+      });
+
+      const response = await fetcher.json();
+      const err = await fetcher.status;
+    } catch (error) {
+      console.log("err", error);
+    } */
+    setLoading(false);
   };
 
   const onSubmit = async (data: any) => {
     setLoading(true);
-
     let imageURIs: any[] = [];
-
     images.map((image: { uri: any }) => {
       imageURIs.push(image.uri);
     });
 
     const srcs = await uploadImageToCloudiinary(images);
 
+    //console.log("adding", [...(product?.images ?? []), ...srcs]);
+
+    const newImages = [...(product?.images ?? []), ...srcs];
     //console.log("srcs", srcs);
     const { data: user } = await supabase.auth.getUser();
-    const { error, status } = await supabase.from("products").insert({
-      name: data.name,
-      user_id: user.user?.id ?? "",
-      description: data.description,
-      price: data.price,
-      images: srcs,
-    });
 
-    setLoading(false);
+    try {
+      const { data: other } = await supabase
+        .from("products")
+        .update({
+          name: data.name,
+          user_id: user.user?.id ?? "",
+          description: data.description,
+          price: data.price,
+          images: [...(product?.images ?? []), ...srcs],
+        })
+        .eq("id", productId)
+        .select("*")
+        .single();
 
-    mutate(SWR_GET_PRODUCTS);
+      console.log("other", other);
+      if (other) {
+        //const inde = parseInt(index?.toString() ?? "");
+        console.log(index);
+        dispatch(
+          setSelectedProduct(
+            { ...other, isSelected: true },
+            parseInt(index?.toString() ?? "")
+          )
+        );
+      }
 
-    if (status == 204) {
-      Alert.alert("Success", "Profile updated");
-    }
-    if (error) {
-      console.log(error);
+      Alert.alert("Success", "Poudct updated");
+      await mutateProduct();
+      await mutate(SWR_GET_PRODUCT);
+    } catch (error: any) {
       Alert.alert("Error", error?.message ?? "");
     }
+    setLoading(false);
+
+    //mutate("get-products");
   };
 
   const pickImage = async () => {
@@ -183,11 +299,10 @@ export default function CreateTransaction({}: IHomeProps) {
 
   const uploadImageToCloudiinary = async (images: Image[]) => {
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
+      data: { user },
+    } = await supabase.auth.getUser();
 
     let apiUrl = "https://api.cloudinary.com/v1_1/escrow/image/upload";
-    let uploadURL = `${apiUrl}/cloudinary/upload`;
     let srcs: any[] = [];
 
     for (let index = 0; index < images.length; index++) {
@@ -195,44 +310,32 @@ export default function CreateTransaction({}: IHomeProps) {
       let data = {
         file,
         upload_preset: "products_unsigned",
-        //folder: `products/${session?.user?.id}`,
-        public_id: `${session?.user?.id}/${generateRandomString(20)}`,
+        public_id: `${user?.id}/${generateRandomString(20)}`,
       };
 
       try {
-        /* const fetcher = await fetch(uploadURL, {
-          body: JSON.stringify(data),
-          headers: {
-            "content-type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          method: "POST",
-        }); */
-
         const fetcher = await fetch(apiUrl, {
           body: JSON.stringify(data),
           headers: {
             "content-type": "application/json",
-            //Authorization: `Bearer ${session?.access_token}`,
           },
           method: "POST",
         });
         const response = await fetcher.json();
-        console.log(response);
         srcs.push(response.public_id);
       } catch (error) {
         console.log(error);
       }
     }
 
-    //console.log("srcs", srcs);
-
     return srcs;
   };
 
+  if (isLoadingProduct) return <Spinner accessibilityLabel="Product loading" />;
+
   return (
     <Box flex={1} px="3" py="3" bg="white">
-      <StackScreen title="Add Product" headerShown={true} />
+      <StackScreen title="Edit Product" headerShown={true} />
 
       <ScrollView>
         <VStack space="3" px="3">
@@ -259,6 +362,7 @@ export default function CreateTransaction({}: IHomeProps) {
             )}
           />
 
+          {/*  <AdvancedImage cldImg={myImage} /> */}
           <Controller
             name="description"
             control={control}
@@ -290,7 +394,7 @@ export default function CreateTransaction({}: IHomeProps) {
               <FormControl isInvalid={invalid}>
                 <FormControl.Label>Price</FormControl.Label>
                 <CurrencyInput
-                  value={value}
+                  value={parseInt(value)}
                   onChangeValue={(e: any) => setValue("price", e ?? "")}
                   onChange={onChange}
                   onBlur={onBlur}
@@ -316,6 +420,59 @@ export default function CreateTransaction({}: IHomeProps) {
             )}
           />
 
+          <VStack space={1}>
+            <MText>Images</MText>
+
+            <HStack height={110}>
+              <FlashList
+                estimatedItemSize={5}
+                data={product?.images}
+                extraData={product?.images}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingHorizontal: 2,
+                }}
+                renderItem={({ item, index }: any) => {
+                  console.log("item", cld.image(item).createCloudinaryURL());
+                  return (
+                    <Box position="relative">
+                      <Image
+                        borderRadius="lg"
+                        mt={2}
+                        mr={2}
+                        key={index}
+                        alt="image"
+                        source={{
+                          uri: cld.image(item).createCloudinaryURL(),
+                        }}
+                        height={100}
+                        width={100}
+                      />
+                      <IconButton
+                        position="absolute"
+                        right="0"
+                        top="0"
+                        borderRadius="full"
+                        p="1"
+                        bg="danger.500"
+                        onPress={() => removeSavedImage(index)}
+                        icon={
+                          <Icon
+                            size={4}
+                            name="delete"
+                            color="white"
+                            borderColor="warmGray.200"
+                            as={AntDesign}
+                          />
+                        }
+                      />
+                    </Box>
+                  );
+                }}
+              />
+            </HStack>
+          </VStack>
           {images.length <= 0 && (
             <Box
               p="3"
@@ -343,50 +500,52 @@ export default function CreateTransaction({}: IHomeProps) {
             </Box>
           )}
 
-          <HStack height={110}>
-            <FlashList
-              estimatedItemSize={5}
-              data={images}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                paddingHorizontal: 2,
-              }}
-              renderItem={({ item, index }: any) => (
-                <Box position="relative">
-                  <Image
-                    borderRadius="lg"
-                    margin={2}
-                    key={index}
-                    alt="image"
-                    source={{ uri: item.uri }}
-                    height={100}
-                    width={100}
-                  />
-                  <IconButton
-                    position="absolute"
-                    right="0"
-                    top="0"
-                    borderRadius="full"
-                    p="1"
-                    bg="danger.500"
-                    icon={
-                      <Icon
-                        size={4}
-                        name="close"
-                        color="white"
-                        borderColor="warmGray.200"
-                        as={AntDesign}
-                        onPress={() => removeHandler(item.assetId)}
-                      />
-                    }
-                  />
-                </Box>
-              )}
-            />
-          </HStack>
+          {images?.length > 0 && (
+            <HStack height={110}>
+              <FlashList
+                estimatedItemSize={5}
+                data={images}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  paddingHorizontal: 2,
+                }}
+                renderItem={({ item, index }: any) => (
+                  <Box position="relative">
+                    <Image
+                      borderRadius="lg"
+                      margin={2}
+                      key={index}
+                      alt="image"
+                      source={{ uri: item.uri }}
+                      loadingIndicatorSource={{ uri: loadingGifURI }}
+                      height={100}
+                      width={100}
+                    />
+                    <IconButton
+                      position="absolute"
+                      right="0"
+                      top="0"
+                      borderRadius="full"
+                      p="1"
+                      bg="danger.500"
+                      icon={
+                        <Icon
+                          size={4}
+                          name="close"
+                          color="white"
+                          borderColor="warmGray.200"
+                          as={AntDesign}
+                          onPress={() => removeHandler(item.assetId)}
+                        />
+                      }
+                    />
+                  </Box>
+                )}
+              />
+            </HStack>
+          )}
 
-          {/*          <MButton onPress={pickImage}>dbcec</MButton> */}
           <MButton
             isLoading={loading}
             isDisabled={!isValid}
@@ -394,7 +553,7 @@ export default function CreateTransaction({}: IHomeProps) {
             _text={{ fontSize: 18 }}
             mt="18"
           >
-            Add product
+            Update product
           </MButton>
         </VStack>
       </ScrollView>

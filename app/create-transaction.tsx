@@ -39,11 +39,46 @@ import CurrencyInput, { formatNumber } from "react-native-currency-input";
 import StackScreen from "../components/StackScreen";
 import { Product } from "../types";
 import { Database } from "../lib/database.types";
-import { getProducts } from "../lib/supabase";
+import { ProductResponseSuccess, getProducts } from "../lib/supabase";
+import useSWR from "swr";
+import Spinner from "../components/Spinner";
+import { SWR_GET_PRODUCTS } from "../config/constants";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+  selectSelected,
+  setSelectedProduct,
+  setSelected as setRedux,
+} from "../store/features/select/selectedSlice";
+import { Cloudinary } from "@cloudinary/url-gen";
+import { useBoundStore } from "../store/store";
 
 export default function CreateTransaction() {
   const supabase = useSupabaseClient<Database>();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const reduxSelected = useAppSelector(selectSelected);
+  //const
+
+  const product = useBoundStore((state) => state.products);
+  //const setProdcutsZ = useSelectedStore((state) => state.setProducts);
+  //const productsz = useSelectedStore((state) => state.products);
+
+  /*  useEffect(() => {
+    console.log("products", productsz);
+  }, [productsz]); */
+
+  const cld = new Cloudinary({
+    cloud: {
+      cloudName: "escrow",
+    },
+  });
+
+  useEffect(() => {
+    console.log(
+      "selected",
+      cld.image(reduxSelected[0]?.images[1]).createCloudinaryURL()
+    );
+  }, [reduxSelected]);
 
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
@@ -53,33 +88,40 @@ export default function CreateTransaction() {
 
   const [selected, setSelected] = useState<Product[]>([]);
 
-  useEffect(() => {
-    supabase
-      .from("products")
-      .select()
-      .then(({ data }) => {
-        const mappedProdcuts = data?.map((item: any) => {
-          item.isSelected = false;
-          return item;
-        });
+  const { data, isLoading: isLoadingProducts } = useSWR(
+    SWR_GET_PRODUCTS,
+    getProducts
+  );
 
-        setProdcuts(mappedProdcuts);
-      });
-  }, []);
+  useEffect(() => {
+    const mapped = data?.data?.map((product: any) => {
+      product.isSelected = false;
+      return product;
+    });
+
+    //setProdcutsZ(mapped);
+    setProdcuts(mapped);
+  }, [data]);
 
   useEffect(() => {
     const selected = products?.filter((item: Product) => item.isSelected);
+
+    dispatch(setRedux(selected));
+
     setSelected(selected);
   }, [products]);
 
   useEffect(() => {
     let totalPayable = 0;
-    selected?.map((item: Product) => {
-      totalPayable += item.price;
+    reduxSelected?.map((item: any) => {
+      totalPayable += parseInt(item.price);
     });
     setValue("amountPayable", totalPayable);
-  }, [selected]);
+  }, [reduxSelected]);
 
+  useEffect(() => {
+    console.log("check");
+  }, []);
   const schema = yup.object().shape({
     transactionName: yup
       .string()
@@ -131,7 +173,28 @@ export default function CreateTransaction() {
     setShow(true);
   };
 
-  //if (!products) return <SplashScreen />;
+  const dummy = () => {
+    dispatch(
+      setSelectedProduct(
+        {
+          can_edit: true,
+          description: "Nrwdiidii",
+          id: 6,
+          images: [
+            "products/d9c444f1-4e91-4abb-b4c7-1d18318990e9/6fPdV6VQpJ4gxvyAIdiz",
+          ],
+          isSelected: true,
+          name: "iPhone X 64 gb s",
+          price: "125000",
+          user_id: "d9c444f1-4e91-4abb-b4c7-1d18318990e9",
+        },
+        0
+      )
+    );
+  };
+  if (isLoadingProducts)
+    return <Spinner accessibilityLabel="Products loading" />;
+
   return (
     <Box flex={1} px="3" py="3" bg="white">
       <StackScreen title="Create Transactions" headerShown={true} />
@@ -241,17 +304,19 @@ export default function CreateTransaction() {
           />
 
           <Box p={0}>
-            {selected?.length > 0 ? (
+            {reduxSelected?.length > 0 ? (
               <VStack space={3}>
-                {selected &&
-                  selected.map((item: Product) => (
-                    <SelectedProductItem
-                      key={item.id}
-                      item={item}
-                      products={products}
-                      setProdcuts={setProdcuts}
-                    />
-                  ))}
+                {reduxSelected &&
+                  reduxSelected.map(
+                    (product: ProductResponseSuccess, index: number) => (
+                      <SelectedProductItem
+                        key={product?.id}
+                        product={product}
+                        index={index}
+                        setProdcuts={setProdcuts}
+                      />
+                    )
+                  )}
               </VStack>
             ) : (
               <Center
@@ -268,7 +333,9 @@ export default function CreateTransaction() {
                   }}
                   onPress={() => setModalVisible(true)}
                 />
-                <MText>Select Product(s)</MText>
+                <MText>
+                  {products?.length > 0 ? "Select Product(s)" : "No Product(s)"}
+                </MText>
               </Center>
             )}
           </Box>
@@ -297,6 +364,10 @@ export default function CreateTransaction() {
             mt="18"
           >
             Create Transaction
+          </MButton>
+
+          <MButton onPress={() => dummy()} _text={{ fontSize: 18 }} mt="18">
+            Mutate
           </MButton>
 
           <Modal
