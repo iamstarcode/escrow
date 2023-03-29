@@ -1,7 +1,6 @@
 import React from "react";
 import { SplashScreen, Stack, Tabs } from "expo-router";
 import { Icon } from "native-base";
-import { useAuth } from "../(auth)/provider";
 
 import {
   AntDesign,
@@ -9,6 +8,9 @@ import {
   FontAwesome5,
   Feather,
 } from "@expo/vector-icons";
+import { supabase } from "../../lib/supabase";
+
+import { useAuth } from "../(auth)/provider";
 
 export const unstable_settings = {
   // Ensure any route can link back to `/`
@@ -16,6 +18,7 @@ export const unstable_settings = {
 };
 
 export default function HomeLayout() {
+  //const supabase =
   const { session } = useAuth();
   if (!session?.user) return <SplashScreen />;
 
@@ -39,7 +42,7 @@ export default function HomeLayout() {
       />
 
       <Tabs.Screen
-        name="transactions"
+        name="Transactions"
         options={{
           href: {
             pathname: "/transactions",
@@ -56,7 +59,7 @@ export default function HomeLayout() {
       />
 
       <Tabs.Screen
-        name="more"
+        name="More"
         options={{
           href: {
             pathname: "/more",

@@ -25,7 +25,7 @@ export const unstable_settings = {
   initialRouteName: "/",
 };
 
-Notifications.setNotificationHandler({
+/* Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: false,
@@ -83,7 +83,7 @@ async function registerForPushNotificationsAsync() {
   }
 
   return token;
-}
+} */
 export default function Layout() {
   const [appIsReady, setAppIsReady] = useState(false);
 
@@ -92,7 +92,7 @@ export default function Layout() {
   const notificationListener = useRef<any>();
   const responseListener = useRef<any>();
 
-  useEffect(() => {
+  /*  useEffect(() => {
     registerForPushNotificationsAsync().then((token: any) =>
       setExpoPushToken(token)
     );
@@ -113,7 +113,7 @@ export default function Layout() {
       );
       Notifications.removeNotificationSubscription(responseListener.current);
     };
-  }, []);
+  }, []); */
 
   useEffect(() => {
     async function prepare() {

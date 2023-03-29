@@ -32,7 +32,7 @@ export default function Home({}: IHomeProps) {
   const supabase = useSupabaseClient();
   const router = useRouter();
 
-  const { session } = useAuth();
+  //const { session } = useAuth();
 
   const { authAxios } = useAxios();
 
