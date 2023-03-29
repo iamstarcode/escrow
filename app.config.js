@@ -14,6 +14,10 @@ module.exports = {
     },
     updates: {
       fallbackToCacheTimeout: 0,
+      url: "https://u.expo.dev/1139c89f-9d56-43e2-811e-c94eb09e29b7",
+    },
+    runtimeVersion: {
+      policy: "sdkVersion",
     },
     assetBundlePatterns: ["**/*"],
     ios: {
@@ -35,9 +39,9 @@ module.exports = {
       eas: {
         projectId: "1139c89f-9d56-43e2-811e-c94eb09e29b7",
       },
-      supabaseUrl: process.env.SUPABASE_URL,
-      supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
-      apiUrl: process.env.API_URL,
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+      API_URL: process.env.API_URL,
     },
   },
 };

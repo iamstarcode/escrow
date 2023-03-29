@@ -43,6 +43,7 @@ import { Database } from "../lib/database.types";
 import { generateRandomString } from "../helpers";
 import Constants from "expo-constants";
 import { SWR_GET_PRODUCTS } from "../config/constants";
+import { useBoundStore } from "../store/store";
 
 export interface IHomeProps extends ScreenProps {}
 
@@ -61,7 +62,8 @@ export default function CreateTransaction({}: IHomeProps) {
 
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
 
-  const { authAxios } = useAxios();
+  const product = useBoundStore((state) => state.products);
+  const setProduct = useBoundStore((state) => state.setProducts);
 
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<any | Image[]>([]);
@@ -108,12 +110,6 @@ export default function CreateTransaction({}: IHomeProps) {
     });
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    //setUser(null);
-    router.replace("/sign-in");
-  };
-
   const onSubmit = async (data: any) => {
     setLoading(true);
 
@@ -125,19 +121,28 @@ export default function CreateTransaction({}: IHomeProps) {
 
     const srcs = await uploadImageToCloudiinary(images);
 
-    //console.log("srcs", srcs);
     const { data: user } = await supabase.auth.getUser();
-    const { error, status } = await supabase.from("products").insert({
-      name: data.name,
-      user_id: user.user?.id ?? "",
-      description: data.description,
-      price: data.price,
-      images: srcs,
-    });
+    const {
+      data: other,
+      error,
+      status,
+    } = await supabase
+      .from("products")
+      .insert({
+        name: data.name,
+        user_id: user.user?.id ?? "",
+        description: data.description,
+        price: data.price,
+        images: srcs,
+      })
+      .select("*")
+      .single();
 
-    setLoading(false);
+    if (other) {
+      setProduct([...product, { ...other, isSelected: false }]);
+    }
 
-    mutate(SWR_GET_PRODUCTS);
+    //mutate(SWR_GET_PRODUCTS);
 
     if (status == 204) {
       Alert.alert("Success", "Profile updated");
@@ -146,6 +151,8 @@ export default function CreateTransaction({}: IHomeProps) {
       console.log(error);
       Alert.alert("Error", error?.message ?? "");
     }
+
+    setLoading(false);
   };
 
   const pickImage = async () => {
@@ -218,7 +225,7 @@ export default function CreateTransaction({}: IHomeProps) {
           method: "POST",
         });
         const response = await fetcher.json();
-        console.log(response);
+        //console.log(response);
         srcs.push(response.public_id);
       } catch (error) {
         console.log(error);

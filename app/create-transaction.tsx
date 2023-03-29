@@ -13,6 +13,7 @@ import {
   Checkbox,
   IconButton,
   Icon,
+  Pressable,
 } from "native-base";
 import { SplashScreen, useRouter } from "expo-router";
 import {
@@ -51,6 +52,7 @@ import {
 } from "../store/features/select/selectedSlice";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { useBoundStore } from "../store/store";
+import { SelectedState } from "../store/productSlice";
 
 export default function CreateTransaction() {
   const supabase = useSupabaseClient<Database>();
@@ -59,34 +61,14 @@ export default function CreateTransaction() {
   const reduxSelected = useAppSelector(selectSelected);
   //const
 
-  const product = useBoundStore((state) => state.products);
-  //const setProdcutsZ = useSelectedStore((state) => state.setProducts);
-  //const productsz = useSelectedStore((state) => state.products);
-
-  /*  useEffect(() => {
-    console.log("products", productsz);
-  }, [productsz]); */
-
-  const cld = new Cloudinary({
-    cloud: {
-      cloudName: "escrow",
-    },
-  });
-
-  useEffect(() => {
-    console.log(
-      "selected",
-      cld.image(reduxSelected[0]?.images[1]).createCloudinaryURL()
-    );
-  }, [reduxSelected]);
+  const products = useBoundStore((state) => state.products);
+  const selected = useBoundStore((state) => state.selected);
+  const setProducts = useBoundStore((state) => state.setProducts);
 
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
-  const [products, setProdcuts] = useState<any | Product[]>([]);
 
   const [modalVisible, setModalVisible] = React.useState(false);
-
-  const [selected, setSelected] = useState<Product[]>([]);
 
   const { data, isLoading: isLoadingProducts } = useSWR(
     SWR_GET_PRODUCTS,
@@ -94,34 +76,22 @@ export default function CreateTransaction() {
   );
 
   useEffect(() => {
+    console.log("check");
     const mapped = data?.data?.map((product: any) => {
       product.isSelected = false;
       return product;
     });
-
-    //setProdcutsZ(mapped);
-    setProdcuts(mapped);
+    setProducts(mapped);
   }, [data]);
 
   useEffect(() => {
-    const selected = products?.filter((item: Product) => item.isSelected);
-
-    dispatch(setRedux(selected));
-
-    setSelected(selected);
-  }, [products]);
-
-  useEffect(() => {
     let totalPayable = 0;
-    reduxSelected?.map((item: any) => {
+    selected?.map((item: any) => {
       totalPayable += parseInt(item.price);
     });
     setValue("amountPayable", totalPayable);
-  }, [reduxSelected]);
+  }, [selected]);
 
-  useEffect(() => {
-    console.log("check");
-  }, []);
   const schema = yup.object().shape({
     transactionName: yup
       .string()
@@ -303,20 +273,30 @@ export default function CreateTransaction() {
             )}
           />
 
+          <Pressable onPress={() => setModalVisible(true)}>
+            <HStack space={1} alignItems="center">
+              <IconButton
+                size="md"
+                p={1}
+                _icon={{
+                  as: MaterialCommunityIcons,
+                  name: "selection",
+                }}
+              />
+              <MText>SHOW PRODUCTS</MText>
+            </HStack>
+          </Pressable>
           <Box p={0}>
-            {reduxSelected?.length > 0 ? (
+            {selected?.length > 0 ? (
               <VStack space={3}>
-                {reduxSelected &&
-                  reduxSelected.map(
-                    (product: ProductResponseSuccess, index: number) => (
-                      <SelectedProductItem
-                        key={product?.id}
-                        product={product}
-                        index={index}
-                        setProdcuts={setProdcuts}
-                      />
-                    )
-                  )}
+                {selected &&
+                  selected.map((product: SelectedState, index: number) => (
+                    <SelectedProductItem
+                      key={product?.id}
+                      product={product}
+                      index={index}
+                    />
+                  ))}
               </VStack>
             ) : (
               <Center
@@ -381,10 +361,7 @@ export default function CreateTransaction() {
               <Modal.Header>Select Products</Modal.Header>
               <Modal.Body>
                 <Box flex={1}>
-                  <ProductItemList
-                    products={products}
-                    setProdcuts={setProdcuts}
-                  />
+                  <ProductItemList />
                 </Box>
               </Modal.Body>
             </Modal.Content>

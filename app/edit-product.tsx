@@ -48,6 +48,8 @@ import {
   setSelected,
   setSelectedProduct,
 } from "../store/features/select/selectedSlice";
+import { useBoundStore } from "../store/store";
+import { SelectedState } from "../store/productSlice";
 
 const loadingGifURI = ImageRN.resolveAssetSource(loadingGif).uri;
 
@@ -68,19 +70,15 @@ const apiUrl = Constants.expoConfig?.extra?.apiUrl;
 
 export default function CreateTransaction() {
   const supabase = useSupabaseClient<Database>();
-  const dispatch = useAppDispatch();
 
   const router = useRouter();
   const { mutate } = useSWRConfig();
 
   const param = useSearchParams(); //
   const productId = param?.productId;
-  const index = param?.index;
-  const select = useAppSelector(selectSelected);
 
-  const [product, setProdcut] = useState<undefined | ProductResponseSuccess>(
-    undefined
-  );
+  const updateAProduct = useBoundStore((state) => state.updateAProduct);
+  const [product, setProdcut] = useState<undefined | any>(undefined);
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<any | Image[]>([]);
@@ -129,9 +127,8 @@ export default function CreateTransaction() {
   });
 
   useEffect(() => {
-    //console.log("uatedt");
     const product = data?.data;
-    setProdcut(product);
+    setProdcut({ ...product });
     setValue("name", product?.name ?? "");
     setValue("description", product?.description ?? "");
     setValue("price", product?.price ?? "", { shouldValidate: true });
@@ -163,16 +160,18 @@ export default function CreateTransaction() {
     setLoading(true);
 
     const images: any = product?.images ?? [];
+    console.log(images);
     const afterDelete = images?.filter(
       (image: any) => image !== product?.images[index]
     );
 
+    console.log(afterDelete);
     let data = {
       publicId: images[index],
     };
 
     try {
-      const res = await fetch(deleteURL, {
+      await fetch(deleteURL, {
         body: JSON.stringify(data),
         headers: {
           "content-type": "application/json",
@@ -180,35 +179,26 @@ export default function CreateTransaction() {
         },
         method: "POST",
       });
-      await supabase
+
+      const { data: other } = await supabase
         .from("products")
         .update({
           images: afterDelete,
         })
-        .eq("id", product?.id);
+        .eq("id", product?.id)
+        .select("*")
+        .single();
 
-      mutate(SWR_GET_PRODUCT);
+      if (other) {
+        setProdcut({ ...other });
+        setImages([]);
+        updateAProduct({ ...other, isSelected: true });
+      }
       mutateProduct();
-      //   dispatch(setSelectedProduct())
-    } catch (error) {}
-
-    //console.log(afterDelete);
-    //if(product?.images )
-    const geFolders = "https://api.cloudinary.com/v1_1/escrow/resources";
-
-    /*  try {
-      const fetcher = await fetch(apiUrl, {
-        headers: {
-          // "content-type": "application/json",
-        },
-        method: "POST",
-      });
-
-      const response = await fetcher.json();
-      const err = await fetcher.status;
     } catch (error) {
-      console.log("err", error);
-    } */
+      console.log(error);
+    }
+
     setLoading(false);
   };
 
@@ -220,11 +210,6 @@ export default function CreateTransaction() {
     });
 
     const srcs = await uploadImageToCloudiinary(images);
-
-    //console.log("adding", [...(product?.images ?? []), ...srcs]);
-
-    const newImages = [...(product?.images ?? []), ...srcs];
-    //console.log("srcs", srcs);
     const { data: user } = await supabase.auth.getUser();
 
     try {
@@ -240,22 +225,18 @@ export default function CreateTransaction() {
         .eq("id", productId)
         .select("*")
         .single();
-
-      console.log("other", other);
+      //console.log("other", other);
       if (other) {
         //const inde = parseInt(index?.toString() ?? "");
-        console.log(index);
-        dispatch(
-          setSelectedProduct(
-            { ...other, isSelected: true },
-            parseInt(index?.toString() ?? "")
-          )
-        );
+        //console.log(index);
+        setImages([]);
+        setProdcut({ ...other });
+        updateAProduct({ ...other, isSelected: true });
       }
 
       Alert.alert("Success", "Poudct updated");
       await mutateProduct();
-      await mutate(SWR_GET_PRODUCT);
+      //await mutate(SWR_GET_PRODUCT);
     } catch (error: any) {
       Alert.alert("Error", error?.message ?? "");
     }
@@ -434,7 +415,7 @@ export default function CreateTransaction() {
                   paddingHorizontal: 2,
                 }}
                 renderItem={({ item, index }: any) => {
-                  console.log("item", cld.image(item).createCloudinaryURL());
+                  // console.log("item", cld.image(item).createCloudinaryURL());
                   return (
                     <Box position="relative">
                       <Image
@@ -446,6 +427,8 @@ export default function CreateTransaction() {
                         source={{
                           uri: cld.image(item).createCloudinaryURL(),
                         }}
+                        loadingIndicatorSource={{ uri: loadingGifURI }}
+                        fallbackSource={{ uri: loadingGifURI }}
                         height={100}
                         width={100}
                       />

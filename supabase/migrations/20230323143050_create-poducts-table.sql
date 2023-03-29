@@ -4,7 +4,7 @@ create table public.products(
   name text not null,
   description text not null,
   images text[] not null,
-  can_edit boolean not null default true,
+  editable boolean not null default true,
   price text not null,
 
   primary key(id)

@@ -1,49 +1,41 @@
 import { create, StateCreator } from "zustand";
 import { ProductResponseSuccess } from "../lib/supabase";
 
-type SelectedState = {
+export type SelectedState = {
   isSelected?: boolean;
-  //images?: any;
 } & ProductResponseSuccess;
 
 export interface ProductSlice {
   products: SelectedState[];
   selected: SelectedState[];
   setProducts: (product: SelectedState[] | undefined) => void;
-  updateAProduct: (index: number, product: SelectedState) => void;
-}
-/* export const useSelectedStore = (set, get) => ({
-  products: [],
-  selected: [],
-  setProducts: (products) => set((state) => ({ products: products })),
-  updateAProduct: (index, product) =>
-    set((state) => ({
-      setProducts: () => state.products,
-    })),
-}); */
-
-interface BearSlice {
-  bears?: number;
-  addBear: () => void;
-  //eatFish: () => void
+  toggleSelected: (index: string | undefined) => void;
+  updateAProduct: (product: SelectedState) => void;
 }
 
-interface OtherSlice {
-  bears?: number;
-  addBear?: () => void;
-  //eatFish: () => void
-}
 export const createProductSlice: StateCreator<
   ProductSlice,
   [],
   [],
   ProductSlice
-> = (set) => ({
+> = (set, get) => ({
   products: [],
   selected: [],
-  setProducts: (products) => set(() => ({ products: products })),
-  updateAProduct: (index, product) =>
-    set((state) => ({
-      setProducts: () => state.products,
-    })),
+  setProducts: (products) => set({ products }),
+  toggleSelected: (id: any) => {
+    const products = get().products.map((item: SelectedState) =>
+      item.id === id ? { ...item, isSelected: !item.isSelected } : item
+    );
+    const selected = products.filter((item: SelectedState) => item.isSelected);
+    set({ products, selected });
+  },
+  updateAProduct: (product) => {
+    const selected = get().selected.map((item: SelectedState) =>
+      item.id === product.id ? { ...product } : item
+    );
+    const products = get().products.map((item: SelectedState) =>
+      item.id === product.id ? { ...product } : item
+    );
+    set({ selected, products });
+  },
 });

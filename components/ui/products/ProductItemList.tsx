@@ -19,25 +19,20 @@ import { Product } from "../../../types";
 import { TouchableOpacity } from "react-native";
 
 import { Cloudinary } from "@cloudinary/url-gen";
+import { useBoundStore } from "../../../store/store";
+import { SelectedState } from "../../../store/productSlice";
 
 const loadingGif = require("../../../assets/img/image-loading-improved.gif");
 const loadingGifURI = ImageRN.resolveAssetSource(loadingGif).uri;
 export interface IProductItemListProps {
-  products: any;
-  setProdcuts: any;
+  products?: any;
+  setProdcuts?: any;
 }
 
-export default function ProductItemList({
-  products,
-  setProdcuts,
-}: IProductItemListProps) {
-  const selectHandler = useCallback((id: any) => {
-    setProdcuts((prev: any[]) => {
-      return prev.map((item: Product) =>
-        item.id === id ? { ...item, isSelected: !item.isSelected } : item
-      );
-    });
-  }, []);
+export default function ProductItemList() {
+  const products = useBoundStore((state) => state.products);
+  const toggleSelected = useBoundStore((state) => state.toggleSelected);
+  const selectHandler = useCallback((id: any) => toggleSelected(id), []);
 
   return (
     <FlashList
@@ -46,8 +41,8 @@ export default function ProductItemList({
       data={products}
       extraData={products}
       keyExtractor={(item: any) => item.id}
-      renderItem={({ item, index }) => (
-        <Item item={item} index={index} onCheckHandler={selectHandler} />
+      renderItem={({ item }) => (
+        <Item item={item} onCheckHandler={selectHandler} />
       )}
     />
   );
@@ -56,11 +51,9 @@ export default function ProductItemList({
 const Item = memo(
   ({
     item,
-    index,
     onCheckHandler,
   }: {
     item: Product;
-    index: number;
     onCheckHandler: (id: any) => void;
   }) => {
     const cld = new Cloudinary({

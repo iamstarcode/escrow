@@ -2,6 +2,7 @@ import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 import Constants from "expo-constants";
+import { Env } from "../config/env";
 import { SUPABASE_STORAGE_KEY } from "../config/constants";
 import { Database } from "./database.types";
 
@@ -9,8 +10,8 @@ export const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
 export const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
 export const supabase = createClient<Database>(
-  supabaseUrl ?? "",
-  supabaseAnonKey ?? "",
+  Env.SUPABASE_URL ?? "",
+  Env.SUPABASE_ANON_KEY ?? "",
   {
     auth: {
       storage: AsyncStorage as any,

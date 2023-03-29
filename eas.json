@@ -8,10 +8,14 @@
       "distribution": "internal"
     },
     "preview": {
+      "env": {
+        "SUPABASE_URL": "https://zhqsdpaoxezcizcgacra.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpocXNkcGFveGV6Y2l6Y2dhY3JhIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODAwNjI5ODQsImV4cCI6MTk5NTYzODk4NH0.74A5gkao7J2ubONTafqpdIbK-5t2CMYdbtFDV9ykXzY",
+        "API_URL": "https://escrow-api.onrender.com"
+      },
       "distribution": "internal",
       "android": {
-        "buildType": "apk",
-        "developmentClient": true
+        "buildType": "apk"
       }
     },
     "preview2": {
