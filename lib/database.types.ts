@@ -36,8 +36,8 @@ export interface Database {
     Tables: {
       products: {
         Row: {
-          can_edit: boolean
           description: string
+          editable: boolean
           id: number
           images: string[]
           name: string
@@ -45,8 +45,8 @@ export interface Database {
           user_id: string
         }
         Insert: {
-          can_edit?: boolean
           description: string
+          editable?: boolean
           id?: never
           images: string[]
           name: string
@@ -54,8 +54,8 @@ export interface Database {
           user_id: string
         }
         Update: {
-          can_edit?: boolean
           description?: string
+          editable?: boolean
           id?: never
           images?: string[]
           name?: string

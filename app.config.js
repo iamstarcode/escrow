@@ -25,6 +25,7 @@ module.exports = {
       bundleIdentifier: "com.abcd1234.escrow",
     },
     android: {
+      googleServicesFile: "./google-services.json",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#FFFFFF",

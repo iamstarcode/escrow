@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "339988579466",
+    "project_id": "escrow-1266a",
+    "storage_bucket": "escrow-1266a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:339988579466:android:d28a0d6902d38616f3d973",
+        "android_client_info": {
+          "package_name": "com.iamstarcode.escrow"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "339988579466-3gse5cssvad4qnutnvotksu1k9vh28h8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCy7be7Rs_TuBwB7qVjvaaVUnrRIBl9BtA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "339988579466-3gse5cssvad4qnutnvotksu1k9vh28h8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
