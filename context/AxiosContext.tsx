@@ -1,19 +1,18 @@
-import { Axios } from 'axios';
-import { createContext, useContext } from 'react';
-import axios from 'axios';
-import React from 'react';
-import * as SecureStore from 'expo-secure-store';
+import { Axios } from "axios";
+import { createContext, useContext } from "react";
+import axios from "axios";
+import React from "react";
+import * as SecureStore from "expo-secure-store";
 
 //import {AuthContext} from './AuthContext'
-import { AuthContext } from './AuthContext';
-import createAuthRefreshInterceptor from 'axios-auth-refresh';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import createAuthRefreshInterceptor from "axios-auth-refresh";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
   selectAccessToken,
   setUser,
   AuthSate,
   selectUser,
-} from '../store/features/auth/authSlice';
+} from "../store/features/auth/authSlice";
 
 interface IAxioses {
   authAxios: Axios;
@@ -22,7 +21,7 @@ interface IAxioses {
 
 //const baseURL = 'http://localhost:8000'
 //const baseURL = 'http://10.0.2.2:8000'
-const baseURL = 'http://192.168.8.101:8000';
+const baseURL = "http://192.168.8.101:8000";
 //192.168.8.1
 
 export type AxiosContextType = {
@@ -64,11 +63,11 @@ export const AxiosProvider: React.FC<Props> = ({ children }) => {
   );
 
   const refreshAuthLogic = async (failedRequest: any) => {
-    const refreshToken = await SecureStore.getItemAsync('refreshToken');
+    const refreshToken = await SecureStore.getItemAsync("refreshToken");
 
     const options = {
-      method: 'GET',
-      url: baseURL + '/auth/refresh',
+      method: "GET",
+      url: baseURL + "/auth/refresh",
       headers: {
         Authorization: `Bearer ${refreshToken}`,
       },
@@ -78,7 +77,7 @@ export const AxiosProvider: React.FC<Props> = ({ children }) => {
     return axios(options)
       .then(async (tokenRefreshResponse) => {
         failedRequest.response.config.headers.Authorization =
-          'Bearer ' + tokenRefreshResponse.data.accessToken;
+          "Bearer " + tokenRefreshResponse.data.accessToken;
 
         const { user, refreshToken, accessToken } = tokenRefreshResponse.data;
         console.log(tokenRefreshResponse.data);
@@ -89,7 +88,7 @@ export const AxiosProvider: React.FC<Props> = ({ children }) => {
         };
 
         dispatch(setUser(authSate));
-        await SecureStore.setItemAsync('refreshToken', refreshToken);
+        await SecureStore.setItemAsync("refreshToken", refreshToken);
         return Promise.resolve();
       })
       .catch((e) => {
@@ -97,7 +96,7 @@ export const AxiosProvider: React.FC<Props> = ({ children }) => {
         dispatch(
           setUser({
             user: null,
-            accessToken: '',
+            accessToken: "",
             authenticated: false,
           })
         );

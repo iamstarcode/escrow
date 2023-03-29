@@ -9,8 +9,7 @@ import {
   SupabaseClient,
   createClient,
 } from "@supabase/supabase-js";
-import { supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
-import { useRouter, useSegments, usePathname, SplashScreen } from "expo-router";
+import { useRouter, useSegments, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SUPABASE_STORAGE_KEY } from "../../config/constants";
 
@@ -21,7 +20,6 @@ export interface IAuthState {
 
 export interface AuthContextType {
   session: AuthSession | null | undefined;
-  getAuthSupabaseClient: () => Promise<SupabaseClient<any, "public", any>>;
 }
 
 interface Props {
@@ -83,25 +81,8 @@ export function AuthProvider({ children }: Props) {
     }
   }, [session, segments]);
 
-  const getAuthSupabaseClient = async () => {
-    const session = await supabase.auth.getSession();
-    const accessToken = session?.data.session?.access_token;
-    console.log("s", accessToken);
-    const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      },
-    });
-
-    return authSupabase;
-  };
-
   return (
-    <AuthContext.Provider value={{ session, getAuthSupabaseClient }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ session }}>{children}</AuthContext.Provider>
   );
 }
 

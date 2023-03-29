@@ -6,9 +6,6 @@ import { Env } from "../config/env";
 import { SUPABASE_STORAGE_KEY } from "../config/constants";
 import { Database } from "./database.types";
 
-export const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
-export const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
-
 export const supabase = createClient<Database>(
   Env.SUPABASE_URL ?? "",
   Env.SUPABASE_ANON_KEY ?? "",
