@@ -35,7 +35,11 @@ import { Controller, useForm } from "react-hook-form";
 import { Alert } from "react-native";
 import { Database } from "../lib/database.types";
 import { ProductResponseSuccess, getSingleProduct } from "../lib/supabase";
-import { generateRandomString } from "../helpers";
+import {
+  generateRandomString,
+  uploadImageToCloudiinarySigned,
+  uploadImageToCloudiinaryUnsigned,
+} from "../helpers";
 import { SWR_GET_PRODUCT } from "../config/constants";
 import Spinner from "../components/Spinner";
 const loadingGif = require("../assets/img/image-loading-improved.gif");
@@ -50,6 +54,7 @@ import {
 } from "../store/features/select/selectedSlice";
 import { useBoundStore } from "../store/store";
 import { SelectedState } from "../store/productSlice";
+import { Env } from "../config/env";
 
 const loadingGifURI = ImageRN.resolveAssetSource(loadingGif).uri;
 
@@ -151,26 +156,25 @@ export default function CreateTransaction() {
       Alert.alert("Error", "You have to have at least one image");
       return;
     }
+    setLoading(true);
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
 
-    let deleteURL = `${apiUrl}/cloudinary/delete`;
-
-    setLoading(true);
-
     const images: any = product?.images ?? [];
-    console.log(images);
+    //console.log(images);
     const afterDelete = images?.filter(
       (image: any) => image !== product?.images[index]
     );
 
-    console.log(afterDelete);
+    //console.log(afterDelete);
     let data = {
       publicId: images[index],
     };
 
     try {
+      let deleteURL = `${Env.API_URL}/cloudinary/delete`;
       await fetch(deleteURL, {
         body: JSON.stringify(data),
         headers: {
@@ -209,15 +213,18 @@ export default function CreateTransaction() {
       imageURIs.push(image.uri);
     });
 
-    const srcs = await uploadImageToCloudiinary(images);
-    const { data: user } = await supabase.auth.getUser();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const srcs = await uploadImageToCloudiinaryUnsigned(images, session);
+    //console.log("srcs", srcs);
 
     try {
       const { data: other } = await supabase
         .from("products")
         .update({
           name: data.name,
-          user_id: user.user?.id ?? "",
+          user_id: session?.user?.id ?? "",
           description: data.description,
           price: data.price,
           images: [...(product?.images ?? []), ...srcs],
@@ -276,40 +283,6 @@ export default function CreateTransaction() {
       setImages(imagesMapped);
       setValue("images", imagesMapped.length, { shouldValidate: true });
     }
-  };
-
-  const uploadImageToCloudiinary = async (images: Image[]) => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    let apiUrl = "https://api.cloudinary.com/v1_1/escrow/image/upload";
-    let srcs: any[] = [];
-
-    for (let index = 0; index < images.length; index++) {
-      const file = `data:image/jpg;base64,${images[index].base64}`;
-      let data = {
-        file,
-        upload_preset: "products_unsigned",
-        public_id: `${user?.id}/${generateRandomString(20)}`,
-      };
-
-      try {
-        const fetcher = await fetch(apiUrl, {
-          body: JSON.stringify(data),
-          headers: {
-            "content-type": "application/json",
-          },
-          method: "POST",
-        });
-        const response = await fetcher.json();
-        srcs.push(response.public_id);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
-    return srcs;
   };
 
   if (isLoadingProduct) return <Spinner accessibilityLabel="Product loading" />;

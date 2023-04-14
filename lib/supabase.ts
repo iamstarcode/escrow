@@ -20,18 +20,27 @@ export const supabase = createClient<Database>(
   }
 );
 
-export const getSession = async () => {
-  const { data, error } = await supabase.auth.getSession();
-  return {
-    session: data.session,
-  };
-};
+export const getProfileByUsername = async (args: string[]) =>
+  supabase
+    .from("profiles")
+    .select("*")
+    .eq("username", args[1])
+    .single()
+    .then((res) => res);
+
+export const getProfileByById = async (args: string[]) =>
+  supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", args[1])
+    .single()
+    .then((res) => res);
 
 export const getProducts = async () =>
   supabase
     .from("products")
     .select(`*`)
-    .eq("can_edit", true)
+    .eq("editable", true)
     .then((res) => res);
 
 export const getSingleProduct = async (args: any) =>
@@ -39,7 +48,7 @@ export const getSingleProduct = async (args: any) =>
     .from("products")
     .select(`*`)
     .eq("id", args[1])
-    .eq("can_edit", args[2])
+    .eq("editable", args[2])
     .single()
     .then((res) => res);
 

@@ -1,6 +1,6 @@
 module.exports = {
   expo: {
-    scheme: "escrow",
+    scheme: "com.iamstarcode.escrow",
     name: "Escrow",
     slug: "escrow",
     version: "1.0.0",
@@ -31,6 +31,8 @@ module.exports = {
         backgroundColor: "#FFFFFF",
       },
       package: "com.iamstarcode.escrow",
+      permissions: ["NOTIFICATIONS"],
+      //useNextNotificationsApi: true,
     },
     web: {
       favicon: "./assets/favicon.png",

@@ -2,11 +2,10 @@ create table public.transactions (
     id bigint primary key generated always as identity not null,
     seller_id uuid not null references auth.users on delete cascade,
     buyer_id uuid null references auth.users on delete cascade,
-    buyer_agreed boolean default false,
-    created_at timestamptz default now(),
     products integer[] not null,
-    amount_payable integer not null
-    
+    amount_payable integer not null,
+    status text not null,
+    created_at timestamptz default now() 
 );
 
 alter table public.transactions enable row level security;

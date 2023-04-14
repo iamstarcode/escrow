@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Center,
@@ -7,15 +7,12 @@ import {
   HStack,
   Modal,
   ScrollView,
-  TextArea,
-  Image,
   VStack,
-  Checkbox,
   IconButton,
   Icon,
   Pressable,
 } from "native-base";
-import { SplashScreen, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import {
   Fontisto,
   AntDesign,
@@ -24,6 +21,8 @@ import {
 import DateTimePicker from "@react-native-community/datetimepicker";
 
 import * as yup from "yup";
+
+import { debounce } from "lodash";
 
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
@@ -35,30 +34,25 @@ import {
 } from "../components/ui/products";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
-import CurrencyInput, { formatNumber } from "react-native-currency-input";
+import CurrencyInput from "react-native-currency-input";
 
 import StackScreen from "../components/StackScreen";
-import { Product } from "../types";
 import { Database } from "../lib/database.types";
-import { ProductResponseSuccess, getProducts } from "../lib/supabase";
+import { getProducts, getProfileByUsername } from "../lib/supabase";
 import useSWR from "swr";
 import Spinner from "../components/Spinner";
-import { SWR_GET_PRODUCTS } from "../config/constants";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
 import {
-  selectSelected,
-  setSelectedProduct,
-  setSelected as setRedux,
-} from "../store/features/select/selectedSlice";
-import { Cloudinary } from "@cloudinary/url-gen";
+  SWR_GET_PRODUCTS,
+  SWR_GET_PROFILE_BY_USERNAME,
+} from "../config/constants";
 import { useBoundStore } from "../store/store";
 import { SelectedState } from "../store/productSlice";
 
 export default function CreateTransaction() {
   const supabase = useSupabaseClient<Database>();
   const router = useRouter();
-  const dispatch = useAppDispatch();
-  const reduxSelected = useAppSelector(selectSelected);
+  //const dispatch = useAppDispatch();
+  //const reduxSelected = useAppSelector(selectSelected);
   //const
 
   const products = useBoundStore((state) => state.products);
@@ -67,6 +61,7 @@ export default function CreateTransaction() {
 
   const [loading, setLoading] = useState(false);
   const [show, setShow] = useState(false);
+  const [username, setUserName] = useState<undefined | string>("");
 
   const [modalVisible, setModalVisible] = React.useState(false);
 
@@ -76,7 +71,6 @@ export default function CreateTransaction() {
   );
 
   useEffect(() => {
-    console.log("check");
     const mapped = data?.data?.map((product: any) => {
       product.isSelected = false;
       return product;
@@ -98,6 +92,10 @@ export default function CreateTransaction() {
       .required("Transantion name is required")
       .min(3, "Transantion name is too short"),
     amountPayable: yup.number().required().positive().typeError(""),
+    username: yup
+      .string()
+      .required("Please enter username")
+      .min(5, "Username too short"),
     deliveryDate: yup.date().required(),
   });
 
@@ -106,11 +104,13 @@ export default function CreateTransaction() {
     handleSubmit,
     setValue,
     getValues,
-    formState: { errors, isValid },
+    trigger,
+    formState: { isValid },
   } = useForm({
     mode: "onChange",
     defaultValues: {
       transactionName: "",
+      username: "",
       deliveryDate: new Date(),
       amountPayable: 0,
     },
@@ -118,11 +118,20 @@ export default function CreateTransaction() {
   });
 
   const onSubmit = async (data: any) => {
-    //console.log(data);
-    setLoading(true);
-
     const { data: user } = await supabase.auth.getUser();
 
+    const b = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.user?.id);
+    //.then((res) => res);
+
+    console.log("user", b);
+    //console.log(data, selected[0].id);
+    setLoading(true);
+
+    const products = selected.map((item) => item.id);
+    console.log(products);
     //get a user using it's username
     //console.log(products[0].id);
     /*  const { data: res } = supabase.from("transactions").insert({
@@ -143,25 +152,41 @@ export default function CreateTransaction() {
     setShow(true);
   };
 
-  const dummy = () => {
-    dispatch(
-      setSelectedProduct(
-        {
-          can_edit: true,
-          description: "Nrwdiidii",
-          id: 6,
-          images: [
-            "products/d9c444f1-4e91-4abb-b4c7-1d18318990e9/6fPdV6VQpJ4gxvyAIdiz",
-          ],
-          isSelected: true,
-          name: "iPhone X 64 gb s",
-          price: "125000",
-          user_id: "d9c444f1-4e91-4abb-b4c7-1d18318990e9",
-        },
-        0
-      )
-    );
+  const {
+    data: buyer,
+    isLoading: userIsLoading,
+    mutate,
+  } = useSWR(
+    getValues("username").length >= 5
+      ? [
+          `${SWR_GET_PROFILE_BY_USERNAME}${getValues("username")}`,
+          getValues("username"),
+        ]
+      : null,
+    getProfileByUsername
+  );
+
+  const handleBuyerChange = (text: string) => {
+    setValue("username", text.trim());
+    trigger("username");
+    userSearch();
   };
+
+  const userSearch = useCallback(
+    debounce(() => {
+      mutate();
+    }, 600),
+    []
+  );
+
+  useEffect(() => {
+    if (buyer?.data?.id) {
+      setUserName(`${buyer.data?.first_name} ${buyer.data?.last_name}`);
+    } else {
+      setUserName(undefined);
+    }
+  }, [buyer]);
+
   if (isLoadingProducts)
     return <Spinner accessibilityLabel="Products loading" />;
 
@@ -170,6 +195,39 @@ export default function CreateTransaction() {
       <StackScreen title="Create Transactions" headerShown={true} />
       <ScrollView>
         <VStack space="3" px="3">
+          <Controller
+            name="username"
+            control={control}
+            render={({
+              field: { onBlur, value },
+              fieldState: { invalid, error },
+            }) => (
+              <FormControl isInvalid={invalid}>
+                <FormControl.Label>Buyer username</FormControl.Label>
+                <MInput
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={handleBuyerChange}
+                  placeholder="Enter username"
+                  type="text"
+                  rightElement={
+                    userIsLoading ? (
+                      <Box w="5" p="4">
+                        <Spinner size="sm" />
+                      </Box>
+                    ) : (
+                      <MText pr="2">
+                        {username ? username : "No user found"}
+                      </MText>
+                    )
+                  }
+                />
+                <FormControl.ErrorMessage fontSize="xl">
+                  {error?.message}
+                </FormControl.ErrorMessage>
+              </FormControl>
+            )}
+          />
           <Controller
             name="transactionName"
             control={control}
@@ -344,10 +402,6 @@ export default function CreateTransaction() {
             mt="18"
           >
             Create Transaction
-          </MButton>
-
-          <MButton onPress={() => dummy()} _text={{ fontSize: 18 }} mt="18">
-            Mutate
           </MButton>
 
           <Modal

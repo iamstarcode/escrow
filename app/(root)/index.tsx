@@ -17,7 +17,6 @@ import { ScreenProps } from "../../types";
 import MButton from "../../components/ui/MButton";
 
 import { useEffect, useState } from "react";
-import useAxios from "../../hooks/usesAxios";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useAuth } from "../(auth)/provider";
 
@@ -33,8 +32,6 @@ export default function Home({}: IHomeProps) {
   const router = useRouter();
 
   //const { session } = useAuth();
-
-  const { authAxios } = useAxios();
 
   const [token, set] = useState<string | null>("");
   const [me, setMe] = useState("");

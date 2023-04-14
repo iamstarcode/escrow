@@ -2,15 +2,18 @@ create table public.profiles (
   id uuid not null references auth.users on delete cascade,
   first_name text,
   last_name text,
-  username text,
+  username text unique,
   primary key (id)
 );
 
 alter table public.profiles enable row level security;
 
-create policy "Profiles are viewable by users who created them."
-  on profiles for select
-  using ( auth.uid() = id );
+create policy "Profiles are viewable by any authenticated user."
+on "public"."profiles"
+as permissive
+for select
+to authenticated
+using (true);
 
 create policy "Users can insert their own profile."
   on profiles for insert

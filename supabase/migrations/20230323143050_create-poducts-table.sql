@@ -32,8 +32,8 @@ AS PERMISSIVE FOR UPDATE
 TO public
 USING (auth.uid() = user_id)
 
-
 -- END OF RLS
+
 
 
 
