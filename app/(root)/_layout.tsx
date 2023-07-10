@@ -116,7 +116,7 @@ export default function HomeLayout() {
     };
   }, []);
 
-  if (!session?.user) return <SplashScreen />;
+  if (!session?.user) return null;
 
   return (
     <Tabs

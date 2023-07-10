@@ -7,23 +7,27 @@ module.exports = {
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
+
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
+
     updates: {
       fallbackToCacheTimeout: 0,
       url: "https://u.expo.dev/1139c89f-9d56-43e2-811e-c94eb09e29b7",
     },
+
     runtimeVersion: {
       policy: "sdkVersion",
     },
-    assetBundlePatterns: ["**/*"],
+
     ios: {
       supportsTablet: true,
       bundleIdentifier: "com.abcd1234.escrow",
     },
+
     android: {
       googleServicesFile: "./google-services.json",
       adaptiveIcon: {
@@ -34,10 +38,12 @@ module.exports = {
       permissions: ["NOTIFICATIONS"],
       //useNextNotificationsApi: true,
     },
+
     web: {
       favicon: "./assets/favicon.png",
       bundler: "metro",
     },
+
     extra: {
       eas: {
         projectId: "1139c89f-9d56-43e2-811e-c94eb09e29b7",
@@ -46,5 +52,12 @@ module.exports = {
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
       API_URL: process.env.API_URL,
     },
+
+    experiments: {
+      typedRoutes: true,
+    },
+
+    plugins: ["expo-router"],
+    assetBundlePatterns: ["**/*"],
   },
 };

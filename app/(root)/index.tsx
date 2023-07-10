@@ -20,21 +20,41 @@ import { useEffect, useState } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useAuth } from "../(auth)/provider";
 
-import { Tabs, useRouter, Stack, SplashScreen } from "expo-router";
-import { View } from "react-native";
+import { Tabs, useRouter, Stack, SplashScreen, Link } from "expo-router";
+import { Alert, View } from "react-native";
 
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { StatusBar } from "expo-status-bar";
-export interface IHomeProps extends ScreenProps {}
+import { API_URL } from "../../config/constants";
+export interface IHomeProps extends ScreenProps { }
 
-export default function Home({}: IHomeProps) {
+export default function Home({ }: IHomeProps) {
   const supabase = useSupabaseClient();
   const router = useRouter();
 
-  //const { session } = useAuth();
-
   const [token, set] = useState<string | null>("");
   const [me, setMe] = useState("");
+
+
+  const handlePress = async () => {
+    ///Alert.alert("Pressed", "Button Pressed")
+    const { data: { session } } = await supabase.auth.getSession()
+    try {
+      const res = await fetch(`${API_URL}/client`, {
+        method: "GET", headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        }
+      })
+
+      const data = await res.json()
+      console.log(data, "suc")
+    } catch (error) {
+      console.log(error, 'error')
+
+    }
+  }
+
 
   //if (!session?.user) return <SplashScreen />;
   return (
@@ -207,6 +227,7 @@ export default function Home({}: IHomeProps) {
             <Text>Recent Transactions</Text>
             <Text>See all</Text>
           </HStack>
+          <MButton onPress={handlePress}>Butoon</MButton>
         </VStack>
       </ScrollView>
     </Box>

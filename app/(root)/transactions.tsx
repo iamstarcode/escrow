@@ -1,9 +1,6 @@
 import {
   Box,
-  Button,
-  Center,
   Fab,
-  Flex,
   HStack,
   Icon,
   Pressable,
@@ -14,22 +11,18 @@ import {
 import * as React from "react";
 
 import { ScreenProps } from "../../types";
-import MButton from "../../components/ui/MButton";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { useAuth } from "../(auth)/provider";
 
-import { Stack, Tabs, useRouter } from "expo-router";
-import { View } from "react-native";
-import { MText } from "../../components/ui";
+import { useRouter } from "expo-router";
 
-import { EvilIcons, MaterialIcons, AntDesign } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import StackScreen from "../../components/StackScreen";
 
-export interface IHomeProps extends ScreenProps {}
+export interface IHomeProps extends ScreenProps { }
 
-export default function Second({}: IHomeProps) {
+export default function Second({ }: IHomeProps) {
   //const user = useAppSelector(selectUser);
   //const dispatch = useAppDispatch();
 

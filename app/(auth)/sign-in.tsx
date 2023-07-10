@@ -46,9 +46,9 @@ import { Alert } from "react-native";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 
 import { useRouter } from "expo-router";
-interface SignUpProps extends ScreenProps {}
+interface SignUpProps extends ScreenProps { }
 
-export default function SignIn({}: SignUpProps) {
+export default function SignIn({ }: SignUpProps) {
   //const dispatch = useAppDispatch();
 
   const router = useRouter();
@@ -96,7 +96,6 @@ export default function SignIn({}: SignUpProps) {
       <ScrollView>
         <Center mt="24">
           <SigninIcon />
-
           <Text style={{ ...fontRegular }} mt="8" mb="2" fontSize="2xl">
             Sign in to Awseome
           </Text>
@@ -169,7 +168,7 @@ export default function SignIn({}: SignUpProps) {
               bg="red.700"
               color="white"
               leftIcon={<Icon as={GoogeIcon} />}
-              onPress={() => {}}
+              onPress={() => { }}
               isLoading={googleLoading}
               _loading={{
                 bg: "gray.400",
@@ -182,7 +181,7 @@ export default function SignIn({}: SignUpProps) {
               leftIcon={
                 <Icon as={AntDesign} name="facebook-square" size="lg" />
               }
-              onPress={() => {}}
+              onPress={() => { }}
               isLoading={facebokLoading}
             >
               <Text style={{ ...fontRegular }} color="white" fontSize={18}>

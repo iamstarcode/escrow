@@ -14,7 +14,6 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { supabase } from "../lib/supabase";
 
 import { theme } from "../config/native-base-config";
-import { Alert, Platform } from "react-native";
 
 import { Provider } from "react-redux";
 import { store } from "../store/store";
@@ -24,17 +23,17 @@ export const unstable_settings = {
   initialRouteName: "/",
 };
 
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
+
 export default function Layout() {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Keep the splash screen visible while we fetch resources
-        SplashScreen.preventAutoHideAsync();
-        // Pre-load fonts, make any API calls you need to do here
 
-        //Check for refresh token if any, continue until next until next API request hits
+        // Pre-load fonts, make any API calls you need to do here
         await Font.loadAsync({
           EuclidCircularARegular: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Regular.ttf"),
           EuclidCircularABold: require("../assets/fonts/euclid-circular-a-cufonfonts/Euclid-Circular-A-Bold.ttf"),
@@ -54,17 +53,14 @@ export default function Layout() {
 
   const onLayoutRootView = useCallback(async () => {
     if (appIsReady) {
-      // This tells the splash screen to hide immediately! If we call this after
-      // `setAppIsReady`, then we may see a blank screen while the app is
-      // loading its initial state and rendering its first pixels. So instead,
-      // we hide the splash screen once we know the root view has already
-      // performed layout.
+      // Hide the splash screen after the fonts have loaded and the
+      // UI is ready.
       SplashScreen.hideAsync();
     }
   }, [appIsReady]);
 
   if (!appIsReady) {
-    return <SplashScreen />;
+    return null
   }
 
   return (

@@ -38,7 +38,6 @@ export function AuthProvider({ children }: Props) {
 
   const [session, setSession] = useState<AuthSession | null | undefined>(null);
 
-  //console.log(path);
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -47,7 +46,6 @@ export function AuthProvider({ children }: Props) {
     const { data: authListner } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
-        //console.log(`${_event}:event raised`);
         if (_event == "TOKEN_REFRESHED") {
           //Handle Accordinngly
         }
