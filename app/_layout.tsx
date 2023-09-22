@@ -16,7 +16,6 @@ import { supabase } from "../lib/supabase";
 import { theme } from "../config/native-base-config";
 
 import { Provider } from "react-redux";
-import { store } from "../store/store";
 
 export const unstable_settings = {
   // Ensure any route can link back to `/`
@@ -83,23 +82,21 @@ export default function Layout() {
         },
       }}
     >
-      <Provider store={store}>
-        <SessionContextProvider supabaseClient={supabase}>
-          <AuthProvider>
-            <NativeBaseProvider theme={theme}>
-              <Box onLayout={onLayoutRootView} flex={1} bg="white">
-                <StatusBar
-                  style="inverted"
-                  animated={true}
-                  backgroundColor="#3333334a"
-                  translucent={true}
-                />
-                <Stack screenOptions={{ headerShown: false }} />
-              </Box>
-            </NativeBaseProvider>
-          </AuthProvider>
-        </SessionContextProvider>
-      </Provider>
+      <SessionContextProvider supabaseClient={supabase}>
+        <AuthProvider>
+          <NativeBaseProvider theme={theme}>
+            <Box onLayout={onLayoutRootView} flex={1} bg="white">
+              <StatusBar
+                style="inverted"
+                animated={true}
+                backgroundColor="#3333334a"
+                translucent={true}
+              />
+              <Stack screenOptions={{ headerShown: false }} />
+            </Box>
+          </NativeBaseProvider>
+        </AuthProvider>
+      </SessionContextProvider>
     </SWRConfig>
   );
 }

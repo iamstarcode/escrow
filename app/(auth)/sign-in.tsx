@@ -191,14 +191,14 @@ export default function SignIn({ }: SignUpProps) {
           </VStack>
           <Flex direction="row" justifyContent="space-between">
             <MText
-              onPress={() => router.push("forgot-password")}
+              /*   onPress={() => router.push("forgot-password")} */
               style={{ ...fontRegular }}
               fontSize={14}
             >
               Forgot password
             </MText>
             <MText
-              onPress={() => router.push("sign-up")}
+              onPress={() => router.push("/(auth)/sign-up")}
               style={{ ...fontRegular }}
               fontSize={14}
             >

@@ -5,9 +5,6 @@ import React from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import {
   AuthSession,
-  AuthUser,
-  SupabaseClient,
-  createClient,
 } from "@supabase/supabase-js";
 import { useRouter, useSegments, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -65,6 +62,9 @@ export function AuthProvider({ children }: Props) {
       !session?.user &&
       !inAuthGroup
     ) {
+
+      //router.replace('/sign-in');
+      //
       AsyncStorage.getItem(SUPABASE_STORAGE_KEY).then((authStorage) => {
         if (authStorage) {
           //if we have a storage dont flash to sign in
@@ -75,6 +75,7 @@ export function AuthProvider({ children }: Props) {
       });
     } else if (session?.user && inAuthGroup) {
       // Redirect away from the sign-in page.
+      //  router.replace('/'); to tabs 
       router.replace("/");
     }
   }, [session, segments]);

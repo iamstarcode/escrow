@@ -1,7 +1,6 @@
 import "react-native-url-polyfill/auto";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
-import Constants from "expo-constants";
 import { Env } from "../config/env";
 import { SUPABASE_STORAGE_KEY } from "../config/constants";
 import { Database } from "./database.types";

@@ -56,7 +56,7 @@ export default function Home({ }: IHomeProps) {
   }
 
 
-  //if (!session?.user) return <SplashScreen />;
+  //if (!session?.user) return null;
   return (
     <Box bg="white" safeArea>
       <Stack.Screen

@@ -1,7 +1,6 @@
 import { Button, Text } from 'native-base';
 import {
   IButtonProps,
-  InterfaceButtonProps,
 } from 'native-base/lib/typescript/components/primitives/Button/types';
 import React from 'react';
 
